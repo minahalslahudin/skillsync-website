@@ -65,7 +65,7 @@ export default function AboutSection() {
             transition={{ duration: 0.5, ease: 'easeOut' }}
             className="text-base text-gray-400 max-w-2xl mx-auto leading-relaxed"
           >
-            Based in South Africa — building globally-ready talent through training and real client work.
+            Based in Pakistan — building globally-ready talent through training and real client work.
           </motion.p>
         </motion.div>
 
@@ -110,8 +110,7 @@ export default function AboutSection() {
               Training Platform
             </p>
             <p className="text-base text-gray-300 leading-relaxed flex-1">
-              Our training arm — a structured fellowship programme that takes motivated young South
-              Africans through real tech skills: design, development, data, and more.
+              Our training arm — a structured fellowship programme that takes motivated young Pakistanisthrough real tech skills: design, development, data, and more.
             </p>
             <Link
               href="/skillsync"

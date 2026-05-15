@@ -7,7 +7,7 @@ import Button from '@/components/ui/Button'
 
 const MODES = {
   skillsync: {
-    eyebrow: "South Africa's Newest Tech Collective",
+    eyebrow: "Pakistan's Newest Tech Collective",
     tagline: 'Build. Learn. Earn.',
     description:
       'Training the next generation of tech talent through hands-on workshops, real-world projects, and a community that grows together.',
@@ -16,7 +16,7 @@ const MODES = {
     accent: '#E94560',
   },
   skillit: {
-    eyebrow: 'Digital Agency · South Africa',
+    eyebrow: 'Digital Agency · Pakistan',
     tagline: 'We Build. You Scale.',
     description:
       'We deliver high-quality digital products for ambitious clients — websites, apps, and brand experiences crafted by real-world talent.',
