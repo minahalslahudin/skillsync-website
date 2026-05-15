@@ -38,6 +38,7 @@ export interface Application {
   applied_at: string
   status: 'pending' | 'approved' | 'rejected' | 'waitlisted'
   admin_notes: string | null
+  cv_url: string | null
 }
 
 export interface Event {

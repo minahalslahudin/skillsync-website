@@ -19,6 +19,44 @@ const REFERRAL_SOURCES = [
   'Other',
 ]
 
+const CV_MAX_BYTES   = 20 * 1024 * 1024
+const CV_ALLOWED_EXT = ['pdf', 'doc', 'docx']
+const CV_ACCEPT      = '.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+
+// Client-side magic-byte check (first 4 bytes of the file).
+// Gives immediate feedback for renamed files (e.g. an .html renamed to .pdf).
+// Supabase's allowed_mime_types on the bucket provides the server-side layer.
+async function hasValidMagicBytes(file: File): Promise<boolean> {
+  const buf    = new Uint8Array(await file.slice(0, 4).arrayBuffer())
+  const isPDF  = buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46
+  const isDOC  = buf[0] === 0xD0 && buf[1] === 0xCF && buf[2] === 0x11 && buf[3] === 0xE0
+  const isDOCX = buf[0] === 0x50 && buf[1] === 0x4B && buf[2] === 0x03 && buf[3] === 0x04
+  return isPDF || isDOC || isDOCX
+}
+
+// PUT the file directly to Supabase Storage via the signed upload URL.
+// Using XHR (not fetch) so upload.onprogress events are available.
+// Returns true on 2xx, false on any error.
+function uploadToSignedUrl(
+  file: File,
+  signedUrl: string,
+  onProgress: (pct: number) => void,
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('PUT', signedUrl)
+    // Content-Type must match the bucket's allowed_mime_types so Supabase
+    // can enforce the server-side MIME restriction.
+    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream')
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100))
+    }
+    xhr.onload  = () => resolve(xhr.status >= 200 && xhr.status < 300)
+    xhr.onerror = () => resolve(false)
+    xhr.send(file)
+  })
+}
+
 const SELECT_CLASS =
   'w-full rounded-lg border border-brand-muted/30 bg-brand-dark px-3 py-2.5 text-sm text-brand-light focus:outline-none focus:ring-2 focus:ring-brand-accent/50 focus:border-brand-accent'
 
@@ -41,11 +79,15 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>
 
 export default function VolunteerApplicationForm() {
-  const [submitted, setSubmitted]         = useState(false)
-  const [skills, setSkills]               = useState<string[]>([])
-  const [skillInput, setSkillInput]       = useState('')
-  const [skillsError, setSkillsError]     = useState('')
-  const skillInputRef                     = useRef<HTMLInputElement>(null)
+  const [submitted, setSubmitted]     = useState(false)
+  const [skills, setSkills]           = useState<string[]>([])
+  const [skillInput, setSkillInput]   = useState('')
+  const [skillsError, setSkillsError] = useState('')
+  const [cvFile, setCvFile]           = useState<File | null>(null)
+  const [cvError, setCvError]         = useState('')
+  const [progress, setProgress]       = useState(0)
+  const skillInputRef                 = useRef<HTMLInputElement>(null)
+  const fileInputRef                  = useRef<HTMLInputElement>(null)
 
   const {
     register,
@@ -57,9 +99,11 @@ export default function VolunteerApplicationForm() {
     defaultValues: { can_commit: false },
   })
 
-  const motivation   = watch('motivation') ?? ''
-  const canCommit    = watch('can_commit')
+  const motivation    = watch('motivation') ?? ''
+  const canCommit     = watch('can_commit')
   const motivationLen = motivation.length
+
+  // ── Skills tag input ──────────────────────────────────────────────────────
 
   function addSkill(raw: string) {
     const tag = raw.trim()
@@ -84,26 +128,88 @@ export default function VolunteerApplicationForm() {
     }
   }
 
-  async function onSubmit(values: FormValues) {
-    if (skills.length === 0) {
-      setSkillsError('Add at least one skill')
+  // ── CV file input ─────────────────────────────────────────────────────────
+
+  async function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null
+    setCvError('')
+    setCvFile(null)
+    if (!file) return
+
+    if (file.size > CV_MAX_BYTES) {
+      setCvError('File too large — maximum 20 MB allowed.')
+      e.target.value = ''
       return
     }
-    if (!values.can_commit) return // already blocked by UI warning
 
-    const res = await fetch('/api/applications', {
-      method: 'POST',
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
+    if (!CV_ALLOWED_EXT.includes(ext)) {
+      setCvError('Only PDF, DOC, and DOCX files are accepted.')
+      e.target.value = ''
+      return
+    }
+
+    if (!await hasValidMagicBytes(file)) {
+      setCvError('File content does not match the expected format. Please upload a valid PDF, DOC, or DOCX.')
+      e.target.value = ''
+      return
+    }
+
+    setCvFile(file)
+  }
+
+  // ── Form submit (three steps) ─────────────────────────────────────────────
+  //
+  // 1. POST /api/cv-upload/sign  →  { signedUrl, path }   (no file bytes sent)
+  // 2. PUT  signedUrl            →  file goes directly to Supabase Storage
+  //                                 (Supabase enforces allowed_mime_types here)
+  // 3. POST /api/applications    →  JSON form fields + cv_url storage path
+
+  async function onSubmit(values: FormValues) {
+    if (skills.length === 0) { setSkillsError('Add at least one skill'); return }
+    if (!values.can_commit) return
+    if (!cvFile) { setCvError('Please upload your CV.'); return }
+
+    setProgress(0)
+
+    // Step 1 ── get signed upload URL (lightweight JSON request)
+    const signRes = await fetch('/api/cv-upload/sign', {
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...values, current_skills: skills }),
+      body:    JSON.stringify({ filename: cvFile.name }),
+    })
+    if (!signRes.ok) {
+      const json = await signRes.json().catch(() => ({})) as { error?: string }
+      toast.error(json.error ?? 'Could not prepare upload. Please try again.')
+      return
+    }
+    const { signedUrl, path } = await signRes.json() as { signedUrl: string; path: string }
+
+    // Step 2 ── upload file directly to Supabase (shows progress bar)
+    const uploaded = await uploadToSignedUrl(cvFile, signedUrl, setProgress)
+    if (!uploaded) {
+      toast.error('CV upload failed — the file may be an unsupported format. Please try again.')
+      setProgress(0)
+      return
+    }
+
+    // Step 3 ── submit form fields as JSON; cv is already in storage
+    const res = await fetch('/api/applications', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ ...values, current_skills: skills, cv_url: path }),
     })
 
+    const data = await res.json().catch(() => ({})) as { error?: string }
     if (res.ok) {
       setSubmitted(true)
     } else {
-      const { error } = await res.json().catch(() => ({ error: 'Unknown error' }))
-      toast.error(error ?? 'Something went wrong. Please try again.')
+      toast.error(data.error ?? 'Something went wrong. Please try again.')
+      setProgress(0)
     }
   }
+
+  // ── Success state ─────────────────────────────────────────────────────────
 
   if (submitted) {
     return (
@@ -115,6 +221,7 @@ export default function VolunteerApplicationForm() {
         </p>
         <div className="text-sm text-brand-muted space-y-1 text-left max-w-xs mx-auto">
           <p>✅ Application submitted</p>
+          <p>📎 CV uploaded successfully</p>
           <p>📧 Confirmation email on its way</p>
           <p>👀 Team review within 7 days</p>
           <p>🗓 Interview invite if shortlisted</p>
@@ -123,8 +230,11 @@ export default function VolunteerApplicationForm() {
     )
   }
 
+  // ── Form ──────────────────────────────────────────────────────────────────
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+
       {/* Personal */}
       <fieldset className="flex flex-col gap-5">
         <legend className="text-xs font-semibold text-brand-muted uppercase tracking-widest mb-1">Personal details</legend>
@@ -147,19 +257,19 @@ export default function VolunteerApplicationForm() {
           <Input
             label="Phone (optional)"
             type="tel"
-            placeholder="+27 XX XXX XXXX"
+            placeholder="+92 XXX XXXXXXX"
             {...register('phone')}
           />
           <Input
             label="City"
-            placeholder="Cape Town, Johannesburg…"
+            placeholder="Karachi, Lahore, Islamabad…"
             {...register('city')}
           />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <Input
             label="University / College (optional)"
-            placeholder="UCT, Wits, CPUT…"
+            placeholder="LUMS, NUST, IBA…"
             {...register('university')}
           />
           <div className="flex flex-col gap-1.5">
@@ -172,7 +282,7 @@ export default function VolunteerApplicationForm() {
         </div>
       </fieldset>
 
-      {/* Role */}
+      {/* Department */}
       <fieldset className="flex flex-col gap-5">
         <legend className="text-xs font-semibold text-brand-muted uppercase tracking-widest mb-1">Department</legend>
         <div className="flex flex-col gap-1.5">
@@ -184,7 +294,7 @@ export default function VolunteerApplicationForm() {
         </div>
       </fieldset>
 
-      {/* Skills tag input */}
+      {/* Skills */}
       <fieldset className="flex flex-col gap-5">
         <legend className="text-xs font-semibold text-brand-muted uppercase tracking-widest mb-1">Skills</legend>
         <div className="flex flex-col gap-1.5">
@@ -258,6 +368,58 @@ export default function VolunteerApplicationForm() {
         </div>
       </fieldset>
 
+      {/* CV Upload */}
+      <fieldset className="flex flex-col gap-5">
+        <legend className="text-xs font-semibold text-brand-muted uppercase tracking-widest mb-1">CV / Resume</legend>
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium text-brand-light">
+            Upload your CV / Resume <span className="text-red-400">*</span>
+          </label>
+          <p className="text-xs text-brand-muted -mt-1">PDF, DOC, or DOCX — maximum 20 MB</p>
+
+          {/* Hidden native file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={CV_ACCEPT}
+            onChange={onFileChange}
+            className="sr-only"
+            id="cv-upload"
+            aria-describedby={cvError ? 'cv-error' : undefined}
+          />
+
+          {/* Styled trigger */}
+          <label
+            htmlFor="cv-upload"
+            className={`flex items-center gap-3 w-full rounded-lg border px-4 py-3 cursor-pointer transition-colors ${
+              cvError
+                ? 'border-red-500/50 bg-red-950/20'
+                : cvFile
+                ? 'border-green-600/40 bg-green-950/20'
+                : 'border-brand-muted/30 bg-brand-dark hover:border-brand-accent/40 hover:bg-brand-accent/5'
+            }`}
+          >
+            <span className="flex-shrink-0 text-lg">{cvFile ? '📎' : '📄'}</span>
+            <span className="flex-1 min-w-0 text-sm">
+              {cvFile
+                ? <span className="text-green-400 font-medium truncate block">{cvFile.name}</span>
+                : <span className="text-brand-muted">Click to choose a file…</span>
+              }
+            </span>
+            <span className="flex-shrink-0 text-xs font-semibold px-2.5 py-1 rounded-md border border-brand-muted/30 text-brand-muted">
+              {cvFile ? 'Change' : 'Browse'}
+            </span>
+          </label>
+
+          {cvError && <p id="cv-error" className="text-xs text-red-400">{cvError}</p>}
+          {cvFile && !cvError && (
+            <p className="text-xs text-brand-muted">
+              {(cvFile.size / (1024 * 1024)).toFixed(2)} MB
+            </p>
+          )}
+        </div>
+      </fieldset>
+
       {/* How did you hear */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-brand-light">How did you hear about us? (optional)</label>
@@ -286,12 +448,36 @@ export default function VolunteerApplicationForm() {
         )}
       </div>
 
+      {/* Upload progress bar — visible during the three-step submit */}
+      {isSubmitting && (
+        <div className="flex flex-col gap-1.5">
+          <div className="flex justify-between items-center text-xs text-brand-muted">
+            <span>
+              {progress === 0
+                ? 'Preparing…'
+                : progress < 100
+                ? 'Uploading CV…'
+                : 'Submitting…'}
+            </span>
+            {progress > 0 && progress < 100 && (
+              <span className="tabular-nums">{progress}%</span>
+            )}
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-brand-mid overflow-hidden">
+            <div
+              className="h-full rounded-full bg-brand-accent transition-all duration-150 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       <Button
         type="submit"
         variant="primary"
         size="lg"
         loading={isSubmitting}
-        disabled={!canCommit}
+        disabled={!canCommit || isSubmitting}
         className="self-start"
       >
         Submit application

@@ -21,9 +21,20 @@ const STATUS_VARIANT: Record<Application['status'], 'neutral' | 'warning' | 'suc
 }
 
 export default function ApplicationCard({ application: app, onStatusChange }: Props) {
-  const [open, setOpen]       = useState(false)
-  const [notes, setNotes]     = useState(app.admin_notes ?? '')
-  const [loading, setLoading] = useState<'approve' | 'reject' | null>(null)
+  const [open, setOpen]         = useState(false)
+  const [notes, setNotes]       = useState(app.admin_notes ?? '')
+  const [loading, setLoading]   = useState<'approve' | 'reject' | null>(null)
+  const [cvLoading, setCvLoading] = useState(false)
+
+  async function viewCV() {
+    if (!app.cv_url) return
+    setCvLoading(true)
+    const res = await fetch(`/api/admin/cvs?path=${encodeURIComponent(app.cv_url)}`)
+    setCvLoading(false)
+    if (!res.ok) { toast.error('Could not load CV.'); return }
+    const { url } = await res.json() as { url: string }
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
 
   async function handleAction(action: 'approve' | 'reject') {
     setLoading(action)
@@ -130,6 +141,22 @@ export default function ApplicationCard({ application: app, onStatusChange }: Pr
               </div>
             </section>
           )}
+
+          {/* CV */}
+          <section>
+            <h4 className="text-xs font-semibold text-brand-muted uppercase tracking-wider mb-2">CV / Resume</h4>
+            {app.cv_url ? (
+              <button
+                onClick={viewCV}
+                disabled={cvLoading}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-brand-accent/30 bg-brand-accent/10 text-brand-accent text-sm font-medium hover:bg-brand-accent/20 transition-colors disabled:opacity-50"
+              >
+                {cvLoading ? 'Loading…' : '📎 View CV'}
+              </button>
+            ) : (
+              <p className="text-sm text-brand-muted">No CV uploaded.</p>
+            )}
+          </section>
 
           {/* Motivation */}
           <section>
