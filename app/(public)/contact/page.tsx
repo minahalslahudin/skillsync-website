@@ -1,9 +1,9 @@
 import ContactForm from '@/components/forms/ContactForm'
 
 const CONTACT_INFO = [
-  { label: 'Email',    value: 'hello@skillsync.co.za',       href: 'mailto:hello@skillsync.co.za' },
-  { label: 'LinkedIn', value: 'linkedin.com/company/skillsync-za', href: 'https://linkedin.com/company/skillsync-za' },
-  { label: 'GitHub',   value: 'github.com/skillsync-za',     href: 'https://github.com/skillsync-za' },
+  { label: 'Email',    value: 'skillit.co@gmail.com',       href: 'mailto:skillit.co@gmail.com' },
+  { label: 'LinkedIn', value: 'linkedin.com/company/skillsync-za', href: 'https://www.linkedin.com/company/skill-synchronized' },
+  { label: 'GitHub',   value: 'github.com/skillsync-za',     href: 'https://github.com/skillitco' },
 ]
 
 export default function ContactPage() {

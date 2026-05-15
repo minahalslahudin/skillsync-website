@@ -172,11 +172,11 @@ export default function AdminSettingsPage() {
         saving={savingSection === 'social'}
         onSave={() => saveSection('social', ['linkedin_url', 'instagram_url', 'youtube_url', 'github_url', 'whatsapp_link'])}
       >
-        <Field label="LinkedIn URL"  value={get('linkedin_url')}  onChange={set('linkedin_url')}  placeholder="https://linkedin.com/company/…" />
-        <Field label="Instagram URL" value={get('instagram_url')} onChange={set('instagram_url')} placeholder="https://instagram.com/…" />
-        <Field label="YouTube URL"   value={get('youtube_url')}   onChange={set('youtube_url')}   placeholder="https://youtube.com/@…" />
-        <Field label="GitHub URL"    value={get('github_url')}    onChange={set('github_url')}    placeholder="https://github.com/…" />
-        <Field label="WhatsApp Link" value={get('whatsapp_link')} onChange={set('whatsapp_link')} placeholder="https://wa.me/…" />
+        <Field label="LinkedIn URL"  value={get('linkedin_url')}  onChange={set('linkedin_url')}  placeholder="https://linkedin.com/company/skill-synchronized" />
+        <Field label="Instagram URL" value={get('instagram_url')} onChange={set('instagram_url')} placeholder="https://instagram.com/nexique_?igsh=MWMzY3ZqMDhjODRzOQ==" />
+        <Field label="YouTube URL"   value={get('youtube_url')}   onChange={set('youtube_url')}   placeholder="https://youtube.com/" />
+        <Field label="GitHub URL"    value={get('github_url')}    onChange={set('github_url')}    placeholder="https://github.com/skillitco" />
+        <Field label="WhatsApp Link" value={get('whatsapp_link')} onChange={set('whatsapp_link')} placeholder="https://whatsapp.com/channel/0029VbCcBcZEquiHv1l8aa3b" />
       </Section>
 
       {/* 3 — Feature Toggles */}
