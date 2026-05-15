@@ -36,6 +36,30 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Maintenance mode — skip admin, api, maintenance, and login routes
+  const isPublicRoute =
+    !pathname.startsWith('/admin') &&
+    !pathname.startsWith('/api') &&
+    !pathname.startsWith('/maintenance') &&
+    !pathname.startsWith('/login') &&
+    !pathname.startsWith('/dashboard')
+
+  if (isPublicRoute) {
+    try {
+      const { data: setting } = await supabase
+        .from('site_settings')
+        .select('value')
+        .eq('key', 'maintenance_mode')
+        .maybeSingle()
+
+      if ((setting as { value: string } | null)?.value === 'true') {
+        return NextResponse.redirect(new URL('/maintenance', request.url))
+      }
+    } catch {
+      // settings table may not exist yet — proceed normally
+    }
+  }
+
   return response
 }
 

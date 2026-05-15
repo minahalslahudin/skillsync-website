@@ -15,9 +15,10 @@ const TYPE_ICON: Record<string, string> = {
 }
 
 export default function AchievementCard({ achievement }: { achievement: Achievement }) {
+  const icon = achievement.badge_icon ?? TYPE_ICON[achievement.type] ?? '🎖️'
   return (
-    <div className="rounded-xl border border-brand-muted/20 bg-brand-mid p-5 flex items-start gap-4 transition-all duration-300 hover:border-brand-accent/40 hover:-translate-y-0.5 hover:shadow-glow">
-      <div className="text-3xl flex-shrink-0 mt-0.5">{TYPE_ICON[achievement.type] ?? '🎖️'}</div>
+    <div className="rounded-xl border border-brand-muted/20 bg-brand-mid p-5 flex items-start gap-4 transition-all duration-300 hover:border-brand-accent/40 hover:-translate-y-0.5">
+      <div className="text-3xl flex-shrink-0 mt-0.5">{icon}</div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <h3 className="font-semibold text-brand-light">{achievement.title}</h3>
@@ -28,15 +29,16 @@ export default function AchievementCard({ achievement }: { achievement: Achievem
         {achievement.description && (
           <p className="text-sm text-gray-400 mt-1 line-clamp-2">{achievement.description}</p>
         )}
-        <p className="text-xs text-brand-muted mt-2">Issued {formatDate(achievement.issued_at)}</p>
+        <p className="text-xs text-brand-muted mt-2">Issued {formatDate(achievement.earned_at)}</p>
         {achievement.certificate_url && (
           <a
             href={achievement.certificate_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-brand-accent hover:underline mt-1 inline-block"
+            download
+            className="inline-flex items-center gap-1 text-xs text-brand-accent hover:underline mt-1"
           >
-            View certificate →
+            ↓ Download PDF
           </a>
         )}
       </div>

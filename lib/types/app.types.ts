@@ -8,12 +8,15 @@ export interface User {
   avatar_url: string | null
   role: Role
   department: Department | null
+  status: 'active' | 'on_hold' | 'removed'
   is_admin: boolean
   joined_at: string
   bio: string | null
   linkedin: string | null
   github: string | null
   portfolio: string | null
+  skills: string[]
+  warning_count: number
 }
 
 export interface Application {
@@ -82,7 +85,17 @@ export interface Project {
   brand: string | null
   is_published: boolean
   is_ongoing: boolean
+  sort_order: number
   created_at: string
+}
+
+export interface FormField {
+  id: string
+  type: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'multiselect' | 'checkbox' | 'number'
+  label: string
+  required: boolean
+  placeholder?: string
+  options?: string[]
 }
 
 export interface Review {
@@ -105,38 +118,44 @@ export interface Task {
   description: string | null
   assigned_to: string
   assigned_by: string
-  status: 'pending' | 'in_progress' | 'completed' | 'overdue'
+  status: 'not_started' | 'in_progress' | 'submitted' | 'completed' | 'overdue'
   priority: 'low' | 'medium' | 'high'
   due_date: string | null
   completed_at: string | null
+  submission_text: string | null
+  file_urls: string[]
   created_at: string
 }
 
 export interface ReportEntry {
-  date: string
-  hours: number
-  description: string
+  day:         string
+  task_name:   string
+  hours:       number
+  deliverable: string
 }
 
 export interface Report {
-  id: string
-  user_id: string
-  week_start: string
-  week_end: string
-  entries: ReportEntry[]
-  total_hours: number
-  notes: string | null
-  submitted_at: string
+  id:            string
+  user_id:       string
+  week_ending:   string
+  entries:       ReportEntry[]
+  total_hours:   number
+  notes:         string | null
+  status:        'pending' | 'approved' | 'rejected'
+  admin_comment: string | null
+  submitted_at:  string
+  reviewed_at:   string | null
 }
 
 export interface Achievement {
   id: string
   user_id: string
-  title: string
   type: 'certificate' | 'milestone' | 'award'
+  title: string
   description: string | null
-  issued_at: string
+  earned_at: string
   certificate_url: string | null
+  badge_icon: string | null
 }
 
 export interface Warning {
@@ -153,8 +172,9 @@ export interface Announcement {
   id: string
   title: string
   body: string
-  audience: 'all' | Role
-  is_pinned: boolean
-  created_by: string
-  created_at: string
+  target: string
+  target_department: string | null
+  target_user_id: string | null
+  sent_by: string
+  sent_at: string
 }

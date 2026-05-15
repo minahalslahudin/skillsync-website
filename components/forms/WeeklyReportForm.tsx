@@ -1,162 +1,214 @@
 'use client'
 
-import { useForm, useFieldArray } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
-import { createClient } from '@/lib/supabase/client'
-import { useUserContext } from '@/lib/context/UserContext'
-import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
+import type { Report } from '@/lib/types/app.types'
 
-const entrySchema = z.object({
-  date:        z.string().min(1, 'Date required'),
-  hours:       z.number().min(0.5, 'Min 0.5h').max(16, 'Max 16h'),
-  description: z.string().min(5, 'Describe the work done'),
-})
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
 
-const schema = z.object({
-  week_start: z.string().min(1, 'Select week start'),
-  week_end:   z.string().min(1, 'Select week end'),
-  entries:    z.array(entrySchema).min(1, 'Add at least one entry'),
-  notes:      z.string().optional(),
-})
+function getComingSunday(): string {
+  const today = new Date()
+  const dayOfWeek = today.getDay() // 0 = Sun
+  const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek
+  const sunday = new Date(today)
+  sunday.setDate(today.getDate() + daysUntilSunday)
+  return sunday.toISOString().split('T')[0]
+}
 
-type FormValues = z.infer<typeof schema>
+interface RowState {
+  task_name:   string
+  hours:       string
+  deliverable: string
+}
 
 interface WeeklyReportFormProps {
   onSuccess?: () => void
+  initial?:   Report | null
 }
 
-export default function WeeklyReportForm({ onSuccess }: WeeklyReportFormProps) {
-  const { user } = useUserContext()
-  const {
-    register,
-    control,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      entries: [{ date: '', hours: 2, description: '' }],
-    },
+export default function WeeklyReportForm({ onSuccess, initial }: WeeklyReportFormProps) {
+  const weekEnding = useMemo(() => {
+    if (initial?.week_ending) return initial.week_ending
+    return getComingSunday()
+  }, [initial])
+
+  const [rows, setRows] = useState<RowState[]>(() => {
+    if (initial?.entries?.length === 7) {
+      return initial.entries.map((e) => ({
+        task_name:   e.task_name,
+        hours:       String(e.hours),
+        deliverable: e.deliverable,
+      }))
+    }
+    return DAYS.map(() => ({ task_name: '', hours: '0', deliverable: '' }))
   })
 
-  const { fields, append, remove } = useFieldArray({ control, name: 'entries' })
+  const [blockers,    setBlockers]   = useState(
+    initial?.notes ? parseNotes(initial.notes).blockers : ''
+  )
+  const [nextWeek,    setNextWeek]   = useState(
+    initial?.notes ? parseNotes(initial.notes).nextWeek : ''
+  )
+  const [submitting,  setSubmitting] = useState(false)
 
-  async function onSubmit(data: FormValues) {
-    if (!user) { toast.error('Not authenticated.'); return }
-    const total_hours = data.entries.reduce((sum, e) => sum + Number(e.hours), 0)
-    const supabase = createClient()
-    const { error } = await supabase.from('reports').insert({
-      user_id:    user.id,
-      week_start: data.week_start,
-      week_end:   data.week_end,
-      entries:    data.entries,
-      total_hours,
-      notes:      data.notes ?? null,
-      submitted_at: new Date().toISOString(),
+  const totalHours = rows.reduce((sum, r) => {
+    const h = parseFloat(r.hours)
+    return sum + (isNaN(h) ? 0 : h)
+  }, 0)
+
+  function updateRow(i: number, field: keyof RowState, value: string) {
+    setRows((prev) => {
+      const next = [...prev]
+      next[i] = { ...next[i], [field]: value }
+      return next
     })
-    if (error) {
-      toast.error('Failed to submit. Please try again.')
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (totalHours <= 0) {
+      toast.error('Total hours must be greater than 0.')
       return
     }
-    toast.success('Report submitted!')
-    onSuccess?.()
+    const hasContent = rows.some((r) => r.task_name.trim() || r.hours !== '0')
+    if (!hasContent) {
+      toast.error('Add at least one entry.')
+      return
+    }
+
+    const entries = rows.map((r, i) => ({
+      day:         DAYS[i],
+      task_name:   r.task_name,
+      hours:       Math.max(0, parseFloat(r.hours) || 0),
+      deliverable: r.deliverable,
+    }))
+
+    const notes = [
+      blockers.trim() ? `Blockers: ${blockers.trim()}` : '',
+      nextWeek.trim() ? `Next week: ${nextWeek.trim()}` : '',
+    ].filter(Boolean).join('\n\n') || null
+
+    setSubmitting(true)
+    const res = await fetch('/api/reports', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        week_ending:  weekEnding,
+        entries,
+        total_hours:  totalHours,
+        notes,
+        ...(initial?.id ? { report_id: initial.id } : {}),
+      }),
+    })
+    setSubmitting(false)
+
+    if (res.ok) {
+      toast.success(initial?.id ? 'Report updated!' : 'Report submitted!')
+      onSuccess?.()
+    } else {
+      const { error } = await res.json().catch(() => ({ error: 'Unknown error' }))
+      toast.error(error ?? 'Failed to submit. Please try again.')
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Input
-          label="Week start"
-          type="date"
-          error={errors.week_start?.message}
-          {...register('week_start')}
-        />
-        <Input
-          label="Week end"
-          type="date"
-          error={errors.week_end?.message}
-          {...register('week_end')}
-        />
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-medium text-brand-light">Daily entries</p>
-          <button
-            type="button"
-            onClick={() => append({ date: '', hours: 2, description: '' })}
-            className="text-xs text-brand-accent hover:underline"
-          >
-            + Add entry
-          </button>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      {/* Week ending */}
+      <div className="flex items-center gap-3">
+        <div>
+          <p className="text-xs text-brand-muted uppercase tracking-wider mb-0.5">Week ending</p>
+          <p className="text-sm font-semibold text-brand-light">{weekEnding}</p>
         </div>
-
-        {fields.map((field, i) => (
-          <div
-            key={field.id}
-            className="rounded-xl border border-brand-muted/20 bg-brand-mid/50 p-4 flex flex-col gap-3"
-          >
-            <div className="grid grid-cols-2 gap-3">
-              <Input
-                label="Date"
-                type="date"
-                error={(errors.entries?.[i]?.date as { message?: string } | undefined)?.message}
-                {...register(`entries.${i}.date`)}
-              />
-              <Input
-                label="Hours"
-                type="number"
-                step="0.5"
-                min="0.5"
-                max="16"
-                error={(errors.entries?.[i]?.hours as { message?: string } | undefined)?.message}
-                {...register(`entries.${i}.hours`, { valueAsNumber: true })}
-              />
-            </div>
-            <div className="flex gap-2 items-start">
-              <div className="flex-1">
-                <Input
-                  label="What did you work on?"
-                  placeholder="Brief description of work completed"
-                  error={(errors.entries?.[i]?.description as { message?: string } | undefined)?.message}
-                  {...register(`entries.${i}.description`)}
-                />
-              </div>
-              {fields.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => remove(i)}
-                  className="mt-6 text-brand-muted hover:text-red-400 transition-colors text-xs"
-                  aria-label="Remove entry"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-          </div>
-        ))}
-
-        {errors.entries?.root && (
-          <p className="text-xs text-red-400">{errors.entries.root.message}</p>
-        )}
+        <div className="ml-auto">
+          <p className="text-xs text-brand-muted">Total hours</p>
+          <p className={`text-2xl font-display font-bold tabular-nums ${totalHours > 0 ? 'text-brand-accent' : 'text-brand-muted'}`}>
+            {totalHours.toFixed(1)}h
+          </p>
+        </div>
       </div>
 
+      {/* 7-row table */}
+      <div className="overflow-x-auto rounded-xl border border-brand-muted/20">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-brand-muted/20 bg-brand-dark/50">
+              <th className="text-left px-3 py-2.5 text-xs font-medium text-brand-muted w-12">Day</th>
+              <th className="text-left px-3 py-2.5 text-xs font-medium text-brand-muted">Task / work done</th>
+              <th className="text-left px-3 py-2.5 text-xs font-medium text-brand-muted w-20">Hours</th>
+              <th className="text-left px-3 py-2.5 text-xs font-medium text-brand-muted">Output / deliverable</th>
+            </tr>
+          </thead>
+          <tbody>
+            {DAYS.map((day, i) => (
+              <tr key={day} className="border-b border-brand-muted/10 last:border-0">
+                <td className="px-3 py-2 text-xs font-semibold text-brand-muted">{day}</td>
+                <td className="px-1 py-1">
+                  <input
+                    value={rows[i].task_name}
+                    onChange={(e) => updateRow(i, 'task_name', e.target.value)}
+                    placeholder="What did you work on?"
+                    className="w-full bg-transparent px-2 py-1.5 text-sm text-brand-light placeholder:text-brand-muted/40 focus:outline-none focus:bg-brand-dark/30 rounded"
+                  />
+                </td>
+                <td className="px-1 py-1">
+                  <input
+                    type="number"
+                    min="0"
+                    max="24"
+                    step="0.5"
+                    value={rows[i].hours}
+                    onChange={(e) => updateRow(i, 'hours', e.target.value)}
+                    className="w-16 bg-transparent px-2 py-1.5 text-sm text-brand-light text-center focus:outline-none focus:bg-brand-dark/30 rounded"
+                  />
+                </td>
+                <td className="px-1 py-1">
+                  <input
+                    value={rows[i].deliverable}
+                    onChange={(e) => updateRow(i, 'deliverable', e.target.value)}
+                    placeholder="Link, file, outcome…"
+                    className="w-full bg-transparent px-2 py-1.5 text-sm text-brand-light placeholder:text-brand-muted/40 focus:outline-none focus:bg-brand-dark/30 rounded"
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Blockers */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-brand-light">Additional notes (optional)</label>
+        <label className="text-sm font-medium text-brand-light">Blockers (optional)</label>
         <textarea
-          {...register('notes')}
-          rows={3}
-          placeholder="Blockers, context, anything the team should know…"
+          value={blockers}
+          onChange={(e) => setBlockers(e.target.value)}
+          rows={2}
+          placeholder="Any obstacles or blockers this week?"
           className="w-full rounded-lg border border-brand-muted/30 bg-brand-dark px-3 py-2.5 text-sm text-brand-light placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-accent/50 focus:border-brand-accent resize-none"
         />
       </div>
 
-      <Button type="submit" variant="primary" loading={isSubmitting} className="self-start">
-        Submit report
+      {/* Next week */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-brand-light">Plan for next week (optional)</label>
+        <textarea
+          value={nextWeek}
+          onChange={(e) => setNextWeek(e.target.value)}
+          rows={2}
+          placeholder="What are you planning to work on next week?"
+          className="w-full rounded-lg border border-brand-muted/30 bg-brand-dark px-3 py-2.5 text-sm text-brand-light placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-accent/50 focus:border-brand-accent resize-none"
+        />
+      </div>
+
+      <Button type="submit" variant="primary" loading={submitting} className="self-start">
+        {initial?.id ? 'Resubmit report' : 'Submit report'}
       </Button>
     </form>
   )
+}
+
+function parseNotes(notes: string): { blockers: string; nextWeek: string } {
+  const blockers = notes.match(/Blockers: ([\s\S]*?)(?:\n\n|$)/)?.[1]?.trim() ?? ''
+  const nextWeek = notes.match(/Next week: ([\s\S]*?)(?:\n\n|$)/)?.[1]?.trim() ?? ''
+  return { blockers, nextWeek }
 }

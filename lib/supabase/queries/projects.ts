@@ -1,6 +1,16 @@
 import { createServerClient } from '@/lib/supabase/server'
 import type { Project } from '@/lib/types/app.types'
 
+export async function getAllProjects(): Promise<Project[]> {
+  const supabase = createServerClient()
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .order('sort_order', { ascending: true })
+  if (error) console.error('[projects] getAllProjects:', error.message)
+  return (data as Project[]) ?? []
+}
+
 export async function getPublishedProjects(limit = 6): Promise<Project[]> {
   const supabase = createServerClient()
   const { data, error } = await supabase

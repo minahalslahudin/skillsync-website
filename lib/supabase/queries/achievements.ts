@@ -7,7 +7,7 @@ export async function getMyAchievements(userId: string): Promise<Achievement[]> 
     .from('achievements')
     .select('*')
     .eq('user_id', userId)
-    .order('issued_at', { ascending: false })
+    .order('earned_at', { ascending: false })
   if (error) console.error('[achievements] getMyAchievements:', error.message)
   return (data as Achievement[]) ?? []
 }

@@ -1,6 +1,29 @@
 import { createServerClient } from '@/lib/supabase/server'
 import type { Review } from '@/lib/types/app.types'
 
+export async function getReviewsByApproval(approved: boolean): Promise<Review[]> {
+  const supabase = createServerClient()
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('*')
+    .eq('is_approved', approved)
+    .order('submitted_at', { ascending: false })
+  if (error) console.error('[reviews] getReviewsByApproval:', error.message)
+  return (data as Review[]) ?? []
+}
+
+export async function getFeaturedReviews(): Promise<Review[]> {
+  const supabase = createServerClient()
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('*')
+    .eq('is_approved', true)
+    .eq('is_featured', true)
+    .order('submitted_at', { ascending: false })
+  if (error) console.error('[reviews] getFeaturedReviews:', error.message)
+  return (data as Review[]) ?? []
+}
+
 export async function getApprovedReviews(limit = 10): Promise<Review[]> {
   const supabase = createServerClient()
   const { data, error } = await supabase

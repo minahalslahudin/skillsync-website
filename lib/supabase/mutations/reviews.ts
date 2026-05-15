@@ -1,5 +1,20 @@
 import { createServerClient } from '@/lib/supabase/server'
 
+export async function updateReview(
+  id: string,
+  data: { body?: string; is_approved?: boolean; is_featured?: boolean }
+): Promise<{ error: string | null }> {
+  const supabase = createServerClient()
+  const { error } = await supabase.from('reviews').update(data).eq('id', id)
+  return { error: error?.message ?? null }
+}
+
+export async function deleteReview(id: string): Promise<{ error: string | null }> {
+  const supabase = createServerClient()
+  const { error } = await supabase.from('reviews').delete().eq('id', id)
+  return { error: error?.message ?? null }
+}
+
 export async function submitReview(data: {
   reviewer_name:       string
   reviewer_role:       string | null
