@@ -1,17 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
+import { useBrand } from '@/lib/context/BrandContext'
+import { createClient } from '@/lib/supabase/client'
 
 const schema = z.object({
-  reviewer_name: z.string().min(2, 'Enter your name'),
-  reviewer_role: z.string().optional(),
-  body:          z.string().min(20, 'Review must be at least 20 characters'),
+  reviewer_name:       z.string().min(2, 'Enter your name'),
+  reviewer_role:       z.string().optional(),
+  workshop_or_service: z.string().optional(),
+  body:                z.string().min(50, 'Review must be at least 50 characters'),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -43,8 +46,12 @@ function StarPicker({ value, onChange }: { value: number; onChange: (v: number) 
 }
 
 export default function ReviewForm() {
-  const [rating, setRating] = useState(0)
+  const { brand }              = useBrand()
+  const [rating, setRating]    = useState(0)
   const [submitted, setSubmitted] = useState(false)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const fileInputRef            = useRef<HTMLInputElement>(null)
+
   const {
     register,
     handleSubmit,
@@ -56,11 +63,41 @@ export default function ReviewForm() {
       toast.error('Please select a star rating.')
       return
     }
+
+    // Optional photo upload to Supabase storage
+    let photo_url: string | null = null
+    if (photoFile) {
+      try {
+        const supabase = createClient()
+        const ext      = photoFile.name.split('.').pop() ?? 'jpg'
+        const fileName = `review-${Date.now()}.${ext}`
+        const { data } = await supabase.storage
+          .from('review-photos')
+          .upload(fileName, photoFile, { upsert: false })
+        if (data) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('review-photos')
+            .getPublicUrl(fileName)
+          photo_url = publicUrl
+        }
+      } catch {
+        // Non-fatal — continue without photo
+      }
+    }
+
     const res = await fetch('/api/reviews', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...values, rating }),
+      body: JSON.stringify({
+        ...values,
+        rating,
+        brand,
+        photo_url,
+        reviewer_role:       values.reviewer_role       ?? null,
+        workshop_or_service: values.workshop_or_service ?? null,
+      }),
     })
+
     if (res.ok) {
       setSubmitted(true)
     } else {
@@ -72,8 +109,8 @@ export default function ReviewForm() {
     return (
       <div className="rounded-xl border border-brand-accent/30 bg-brand-accent/5 p-6 text-center">
         <p className="text-2xl mb-2">⭐</p>
-        <h3 className="font-display font-bold text-brand-light mb-1">Thank you for your review!</h3>
-        <p className="text-sm text-gray-400">It will appear after approval.</p>
+        <h3 className="font-display font-bold text-brand-light mb-1">Thank you!</h3>
+        <p className="text-sm text-gray-400">Your review is pending approval and will appear shortly.</p>
       </div>
     )
   }
@@ -81,7 +118,7 @@ export default function ReviewForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
       <div>
-        <p className="text-sm font-medium text-brand-light mb-2">Your rating</p>
+        <p className="text-sm font-medium text-brand-light mb-2">Your rating <span className="text-red-400">*</span></p>
         <StarPicker value={rating} onChange={setRating} />
       </div>
 
@@ -95,13 +132,20 @@ export default function ReviewForm() {
         <Input
           label="Your role / title (optional)"
           placeholder="e.g. Student, Developer"
-          error={errors.reviewer_role?.message}
           {...register('reviewer_role')}
         />
       </div>
 
+      <Input
+        label="Workshop or service reviewed (optional)"
+        placeholder="e.g. Figma for Beginners, Web Dev Cohort…"
+        {...register('workshop_or_service')}
+      />
+
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-brand-light">Your review</label>
+        <div className="flex justify-between items-baseline">
+          <label className="text-sm font-medium text-brand-light">Your review <span className="text-red-400">*</span></label>
+        </div>
         <textarea
           {...register('body')}
           rows={4}
@@ -109,6 +153,37 @@ export default function ReviewForm() {
           className="w-full rounded-lg border border-brand-muted/30 bg-brand-dark px-3 py-2.5 text-sm text-brand-light placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-accent/50 focus:border-brand-accent resize-none"
         />
         {errors.body && <p className="text-xs text-red-400">{errors.body.message}</p>}
+      </div>
+
+      {/* Photo upload */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-brand-light">Photo (optional)</label>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="text-sm px-3 py-2 rounded-lg border border-brand-muted/30 text-brand-muted hover:text-brand-light hover:border-brand-accent/40 transition-colors"
+          >
+            {photoFile ? photoFile.name : 'Choose file…'}
+          </button>
+          {photoFile && (
+            <button
+              type="button"
+              onClick={() => { setPhotoFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
+              className="text-xs text-brand-muted hover:text-red-400 transition-colors"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
+        />
+        <p className="text-xs text-brand-muted">JPG, PNG or WebP. Max 2 MB.</p>
       </div>
 
       <Button type="submit" variant="primary" loading={isSubmitting} className="self-start">

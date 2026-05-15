@@ -1,8 +1,14 @@
-import { getUpcomingEvents } from '@/lib/supabase/queries/events'
-import EventCard from '@/components/public/EventCard'
+import { Suspense } from 'react'
+import { getAllUpcomingEvents } from '@/lib/supabase/queries/events'
+import EventsFilterGrid from '@/components/public/EventsFilterGrid'
+
+export const metadata = {
+  title: 'Events | skillSYNC × skillIT',
+  description: 'Upcoming workshops, cohorts, and events open for registration.',
+}
 
 export default async function EventsPage() {
-  const events = await getUpcomingEvents(50)
+  const events = await getAllUpcomingEvents(50)
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
@@ -19,9 +25,9 @@ export default async function EventsPage() {
       {events.length === 0 ? (
         <p className="text-center py-20 text-brand-muted">No upcoming events right now. Check back soon.</p>
       ) : (
-        <div className="flex flex-col gap-4">
-          {events.map((e) => <EventCard key={e.id} event={e} />)}
-        </div>
+        <Suspense fallback={null}>
+          <EventsFilterGrid events={events} />
+        </Suspense>
       )}
     </div>
   )

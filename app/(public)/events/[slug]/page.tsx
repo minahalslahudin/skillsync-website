@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getEventBySlug } from '@/lib/supabase/queries/events'
 import { formatDate } from '@/lib/utils/formatDate'
@@ -11,6 +12,20 @@ interface Props {
 const TYPE_LABEL: Record<string, string> = {
   event:  'Event',
   cohort: 'Cohort',
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const event = await getEventBySlug(params.slug)
+  if (!event) return { title: 'Event Not Found | skillSYNC' }
+  return {
+    title: `${event.title} | skillSYNC Events`,
+    description: event.description ?? undefined,
+    openGraph: {
+      title: event.title,
+      description: event.description ?? undefined,
+      images: event.cover_image ? [event.cover_image] : [],
+    },
+  }
 }
 
 export default async function EventDetailPage({ params }: Props) {

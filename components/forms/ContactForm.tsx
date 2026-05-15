@@ -8,10 +8,12 @@ import toast from 'react-hot-toast'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 
+const SUBJECTS = ['General', 'Partnership', 'Client Enquiry', 'Workshop', 'Other'] as const
+
 const schema = z.object({
   name:    z.string().min(2, 'Enter your name'),
   email:   z.string().email('Enter a valid email'),
-  subject: z.string().min(5, 'Enter a subject'),
+  subject: z.enum(SUBJECTS, { message: 'Select a subject' }),
   message: z.string().min(20, 'Message must be at least 20 characters'),
 })
 
@@ -66,12 +68,17 @@ export default function ContactForm() {
         />
       </div>
 
-      <Input
-        label="Subject"
-        placeholder="What's this about?"
-        error={errors.subject?.message}
-        {...register('subject')}
-      />
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-brand-light">Subject</label>
+        <select
+          {...register('subject')}
+          className="w-full rounded-lg border border-brand-muted/30 bg-brand-dark px-3 py-2.5 text-sm text-brand-light focus:outline-none focus:ring-2 focus:ring-brand-accent/50 focus:border-brand-accent"
+        >
+          <option value="">Select a subject…</option>
+          {SUBJECTS.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        {errors.subject && <p className="text-xs text-red-400">{errors.subject.message}</p>}
+      </div>
 
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-brand-light">Message</label>

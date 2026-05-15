@@ -1,13 +1,19 @@
+import { Suspense } from 'react'
 import { getApprovedReviews } from '@/lib/supabase/queries/reviews'
-import ReviewCarousel from '@/components/public/ReviewCarousel'
+import ReviewsGrid from '@/components/public/ReviewsGrid'
 import ReviewForm from '@/components/forms/ReviewForm'
 
+export const metadata = {
+  title: 'Reviews | skillSYNC × skillIT',
+  description: 'Honest words from our learners, builders, and contributors.',
+}
+
 export default async function ReviewsPage() {
-  const reviews = await getApprovedReviews(20)
+  const reviews = await getApprovedReviews(100)
 
   return (
     <div className="py-20">
-      {/* Reviews */}
+      {/* Reviews grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
         <div className="mb-10">
           <p className="text-brand-accent text-sm font-semibold tracking-widest uppercase mb-3">Community</p>
@@ -18,7 +24,16 @@ export default async function ReviewsPage() {
             Honest words from our learners, builders, and contributors.
           </p>
         </div>
-        <ReviewCarousel reviews={reviews} />
+
+        {reviews.length === 0 ? (
+          <p className="text-center py-20 text-brand-muted">
+            No reviews yet. Be the first to share your experience!
+          </p>
+        ) : (
+          <Suspense fallback={null}>
+            <ReviewsGrid reviews={reviews} />
+          </Suspense>
+        )}
       </section>
 
       {/* Leave a review */}

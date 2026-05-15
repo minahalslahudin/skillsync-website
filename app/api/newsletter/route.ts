@@ -20,12 +20,9 @@ export async function POST(req: NextRequest) {
   const supabase = createServerClient()
   const { error } = await supabase
     .from('newsletter')
-    .insert({ email: parsed.data.email })
+    .upsert({ email: parsed.data.email }, { onConflict: 'email', ignoreDuplicates: true })
 
   if (error) {
-    if (error.code === '23505') {
-      return NextResponse.json({ error: 'Already subscribed' }, { status: 409 })
-    }
     console.error('[newsletter]', error)
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }

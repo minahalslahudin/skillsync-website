@@ -21,14 +21,20 @@ export interface Application {
   full_name: string
   email: string
   phone: string | null
-  role_applied: Role
-  department_preference: Department | null
-  motivation: string
-  skills: string[]
-  status: 'pending' | 'approved' | 'rejected'
-  submitted_at: string
-  reviewed_at: string | null
-  reviewed_by: string | null
+  city: string | null
+  university: string | null
+  semester: string | null
+  department_interest: string | null
+  current_skills: string[]
+  motivation: string | null
+  can_commit: boolean | null
+  linkedin: string | null
+  github: string | null
+  portfolio: string | null
+  referral_source: string | null
+  applied_at: string
+  status: 'pending' | 'approved' | 'rejected' | 'waitlisted'
+  admin_notes: string | null
 }
 
 export interface Event {
@@ -81,15 +87,15 @@ export interface Project {
 
 export interface Review {
   id: string
-  author_name: string
-  author_role: string | null
-  author_avatar: string | null
   reviewer_name: string
   reviewer_role: string | null
-  photo_url: string | null
+  workshop_or_service: string | null
   rating: number
   body: string
+  brand: string | null
   is_approved: boolean
+  is_featured: boolean
+  photo_url: string | null
   submitted_at: string
 }
 
