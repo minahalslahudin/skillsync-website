@@ -14,7 +14,7 @@ const resolveSchema = z.object({
   warningId: z.string().uuid(),
 })
 
-async function guardAdmin(req: NextRequest) {
+async function guardAdmin(_req: NextRequest) {
   const supabase = createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null

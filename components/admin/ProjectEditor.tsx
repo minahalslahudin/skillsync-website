@@ -5,6 +5,7 @@ import { useForm, Controller } from 'react-hook-form'
 import type { Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import type { Project } from '@/lib/types/app.types'
 
@@ -230,7 +231,7 @@ export default function ProjectEditor({ project, onClose, onSaved }: Props) {
               <div className="flex flex-wrap gap-2 mt-2">
                 {imageUrls.map((url) => (
                   <div key={url} className="relative group w-16 h-16 rounded border border-brand-muted/30 overflow-hidden">
-                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <Image src={url} alt="" fill className="object-cover" sizes="64px" />
                     <button
                       type="button"
                       onClick={() => setImageUrls((p) => p.filter((u) => u !== url))}

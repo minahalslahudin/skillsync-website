@@ -26,11 +26,6 @@ const STATUS_LABEL: Record<Task['status'], string> = {
   overdue:     'Overdue',
 }
 
-const PRIORITY_COLOR: Record<string, string> = {
-  low:    'text-brand-muted',
-  medium: 'text-yellow-400',
-  high:   'text-red-400',
-}
 
 interface TasksBoardProps {
   initialTasks: Task[]

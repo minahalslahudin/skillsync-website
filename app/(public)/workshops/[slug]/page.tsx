@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import Image from 'next/image'
 import { getEventBySlug } from '@/lib/supabase/queries/events'
 import { formatDate } from '@/lib/utils/formatDate'
 import Badge from '@/components/ui/Badge'
@@ -36,12 +37,15 @@ export default async function WorkshopDetailPage({ params }: Props) {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
       {/* Cover */}
       {event.cover_image && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={event.cover_image}
-          alt={event.title}
-          className="w-full h-64 object-cover rounded-2xl mb-10"
-        />
+        <div className="relative w-full h-64 rounded-2xl overflow-hidden mb-10">
+          <Image
+            src={event.cover_image}
+            alt={event.title}
+            fill
+            className="object-cover"
+            priority
+          />
+        </div>
       )}
 
       <div className="flex flex-col lg:flex-row gap-12">

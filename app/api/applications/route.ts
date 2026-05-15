@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 
   // Notify admin via Resend (non-fatal)
   const apiKey = process.env.RESEND_API_KEY
-  const adminEmail = process.env.ADMIN_EMAIL ?? process.env.CONTACT_EMAIL ?? 'admin@skillsync.co.za'
+  const adminEmail = process.env.ADMIN_EMAIL ?? process.env.CONTACT_EMAIL ?? 'admin@skillsync.pk'
   const from = process.env.RESEND_FROM ?? 'onboarding@resend.dev'
 
   if (apiKey) {

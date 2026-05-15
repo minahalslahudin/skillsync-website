@@ -9,7 +9,7 @@ const inter = Inter({
   display: 'swap',
 })
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://skillsync.co.za'
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://skillsync.pk'
 
 export const metadata: Metadata = {
   title: {
@@ -17,22 +17,22 @@ export const metadata: Metadata = {
     template: '%s | skillSYNC × skillIT',
   },
   description:
-    "South Africa's newest tech training platform and creative agency — building the next generation of talent through workshops, real projects, and community.",
+    "Pakistan's newest tech training platform and creative agency — building the next generation of talent through workshops, real projects, and community.",
   metadataBase: new URL(siteUrl),
   openGraph: {
     title: 'skillSYNC × skillIT',
     description:
-      "South Africa's newest tech training platform and creative agency.",
+      "Pakistan's newest tech training platform and creative agency.",
     url: siteUrl,
     siteName: 'skillSYNC × skillIT',
     images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'skillSYNC × skillIT' }],
-    locale: 'en_ZA',
+    locale: 'en_PK',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'skillSYNC × skillIT',
-    description: "South Africa's newest tech training platform and creative agency.",
+    description: "Pakistan's newest tech training platform and creative agency.",
     images: ['/og-image.png'],
   },
   icons: { icon: '/favicon.ico' },
@@ -41,8 +41,15 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+
   return (
     <html lang="en" className={inter.variable}>
+      <head>
+        {supabaseUrl && (
+          <link rel="preconnect" href={supabaseUrl} />
+        )}
+      </head>
       <body className="font-sans antialiased bg-brand-dark text-gray-300">
         <Providers>{children}</Providers>
       </body>

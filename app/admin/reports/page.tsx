@@ -106,7 +106,7 @@ export default function AdminReportsPage() {
           <p className="text-sm text-zinc-500 mt-0.5">{reports.length} results</p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-zinc-500 mb-0.5">This week's submissions</p>
+          <p className="text-xs text-zinc-500 mb-0.5">This week&apos;s submissions</p>
           <p className="text-2xl font-bold text-zinc-100">{submissionPct}%</p>
           <p className="text-xs text-zinc-500">{rate.submitted} / {rate.total} active volunteers</p>
         </div>

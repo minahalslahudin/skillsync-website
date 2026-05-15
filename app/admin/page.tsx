@@ -47,7 +47,7 @@ export default async function AdminPage() {
         <h2 className="text-3xl font-display font-bold text-brand-light">
           Good to see you, <span className="text-red-400">{firstName}</span>
         </h2>
-        <p className="text-gray-400 mt-1">Here's what's happening across skillSYNC today.</p>
+        <p className="text-gray-400 mt-1">Here&apos;s what&apos;s happening across skillSYNC today.</p>
       </div>
 
       {/* Summary cards */}

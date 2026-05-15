@@ -35,7 +35,7 @@ const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'neutral
   removed:  'danger',
 }
 
-export default function VolunteerTable({ initialVolunteers, currentUserId }: Props) {
+export default function VolunteerTable({ initialVolunteers, currentUserId: _currentUserId }: Props) {
   const [volunteers, setVolunteers] = useState<VolunteerRow[]>(initialVolunteers)
   const [search, setSearch]         = useState('')
   const [sortBy, setSortBy]         = useState<'name' | 'joined' | 'warnings'>('joined')

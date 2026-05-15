@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { getProjectBySlug } from '@/lib/supabase/queries/projects'
 import { formatDate } from '@/lib/utils/formatDate'
 
@@ -63,12 +64,15 @@ export default async function ProjectDetailPage({ params }: Props) {
 
       {/* Hero image */}
       {coverImage && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={coverImage}
-          alt={project.title}
-          className="w-full h-72 object-cover rounded-2xl mb-10"
-        />
+        <div className="relative w-full h-72 rounded-2xl overflow-hidden mb-10">
+          <Image
+            src={coverImage}
+            alt={project.title}
+            fill
+            className="object-cover"
+            priority
+          />
+        </div>
       )}
 
       {/* Category + status */}
