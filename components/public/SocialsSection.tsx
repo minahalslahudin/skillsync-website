@@ -20,7 +20,7 @@ interface SocialCard {
 const SOCIALS: SocialCard[] = [
   {
     label: 'WhatsApp',
-    handle: 'Community Group',
+    handle: 'Community Channel',
     desc: 'Join our active WhatsApp community for real-time updates, discussions, and announcements.',
     href: 'https://whatsapp.com/channel/0029VbCcBcZEquiHv1l8aa3b',
     Icon: FaWhatsapp,
@@ -32,7 +32,7 @@ const SOCIALS: SocialCard[] = [
   },
   {
     label: 'LinkedIn',
-    handle: '@skillsync',
+    handle: '@skillSYNC',
     desc: 'Follow us for career opportunities, thought leadership articles, and milestones.',
     href: 'https://www.linkedin.com/company/skill-synchronized',
     Icon: FaLinkedin,
@@ -44,7 +44,7 @@ const SOCIALS: SocialCard[] = [
   },
   {
     label: 'Instagram',
-    handle: '@skillsync.za',
+    handle: '@nexique_',
     desc: 'Behind-the-scenes content, workshop highlights, and community moments.',
     href: 'https://instagram.com/nexique_?igsh=MWMzY3ZqMDhjODRzOQ==',
     Icon: FaInstagram,
@@ -56,7 +56,7 @@ const SOCIALS: SocialCard[] = [
   },
   {
     label: 'YouTube',
-    handle: '@skillsync',
+    handle: ' ',
     desc: 'Workshop recordings, tutorials, project showcases, and event recaps.',
     href: 'https://youtube.com/',
     Icon: FaYoutube,
@@ -68,7 +68,7 @@ const SOCIALS: SocialCard[] = [
   },
   {
     label: 'GitHub',
-    handle: 'skillsync-za',
+    handle: 'skillitco',
     desc: 'Explore our open-source projects, tools, and fellowship contributions.',
     href: 'https://github.com/skillitco',
     Icon: FaGithub,
