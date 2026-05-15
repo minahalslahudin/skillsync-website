@@ -1,0 +1,15 @@
+import { BrandProvider } from '@/lib/context/BrandContext'
+import Navbar from '@/components/public/Navbar'
+import Footer from '@/components/public/Footer'
+
+export default function PublicLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <BrandProvider>
+      <Navbar />
+      <main className="min-h-screen pt-16">
+        {children}
+      </main>
+      <Footer />
+    </BrandProvider>
+  )
+}
