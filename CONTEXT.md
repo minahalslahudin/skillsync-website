@@ -343,19 +343,7 @@ className="... transition-all duration-200 hover:scale-105 active:scale-95"
 
 \---
 
-## CURRENT BUILD STATUS
 
-<!-- Claude Code updates this section as features are completed -->
-
-* \[ ] Phase 1 — Public Website
-* \[ ] Phase 2 — Auth + Volunteer Dashboard
-* \[ ] Phase 3 — Admin Panel
-* \[ ] Phase 4 — Polish + Deploy
-
-**Last completed session:** \[Update this after each session]
-**Next task:** \[Update this after each session]
-
-\---
 
 ## ENVIRONMENT VARIABLES NEEDED
 
@@ -375,18 +363,6 @@ NEXT\_PUBLIC\_SITE\_URL=http://localhost:3000
 
 \---
 
-## WHAT NOT TO DO — COMMON MISTAKES TO AVOID
-
-* ❌ Do NOT use `getServerSideProps` or `getStaticProps` — we use App Router
-* ❌ Do NOT use `pages/` directory — only `app/`
-* ❌ Do NOT import server-only code in client components
-* ❌ Do NOT use `useRouter` for redirects in server components — use `redirect()` from `next/navigation`
-* ❌ Do NOT create a Prisma schema — we use Supabase client directly
-* ❌ Do NOT use `axios` — use native `fetch` or Supabase client
-* ❌ Do NOT use `useState` for server-fetched data — fetch in server component, pass as props
-* ❌ Do NOT skip TypeScript types — every function needs typed params and return
-* ❌ Do NOT use inline styles — only Tailwind classes
-* ❌ Do NOT hardcode any text content that should come from DB
 
 
 
