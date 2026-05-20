@@ -1,6 +1,7 @@
 # skillSYNC × skillIT
 
 Link to the video Demonstration: https://drive.google.com/file/d/1F0GJ0TgUwEXtJlJ4BBdU9b_FxlyHNST1/view?usp=sharing 
+
 Combined website for **skillIT** (creative agency) and **skillSYNC** (tech training platform). Built with Next.js 14 App Router, Supabase, and Tailwind CSS.
 
 ## Stack
