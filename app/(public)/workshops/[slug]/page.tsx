@@ -29,7 +29,10 @@ export default async function WorkshopDetailPage({ params }: Props) {
   const event = await getEventBySlug(params.slug)
   if (!event || event.type !== 'workshop') notFound()
 
-  const isUpcomingEvent = event.date ? new Date(event.date) > new Date() : false
+  const now             = new Date()
+  const isUpcomingEvent = event.date ? new Date(event.date) > now : false
+  const deadlinePassed  = event.registration_deadline ? new Date(event.registration_deadline) < now : false
+  const registrationActive = event.registration_open && !deadlinePassed
   const seatsLeft = event.seats != null ? event.seats - event.seats_taken : null
   const fillPct   = event.seats && event.seats > 0
     ? Math.min((event.seats_taken / event.seats) * 100, 100)
@@ -181,7 +184,7 @@ export default async function WorkshopDetailPage({ params }: Props) {
               )}
             </div>
 
-            {event.registration_open && (
+            {registrationActive && !event.is_paid && (
               <>
                 <p className="text-sm font-medium text-brand-light mb-4">Register</p>
                 <DynamicEventForm event={event} />
@@ -189,7 +192,7 @@ export default async function WorkshopDetailPage({ params }: Props) {
             )}
 
             {/* Upcoming paid workshop — custom registration form */}
-            {!event.registration_open && isUpcomingEvent && event.is_paid && (
+            {registrationActive && event.is_paid && (
               <div className="flex flex-col gap-3">
                 <p className="text-sm text-gray-400 leading-relaxed">
                   Registration is open. Complete your registration and payment to secure your seat.
@@ -206,9 +209,9 @@ export default async function WorkshopDetailPage({ params }: Props) {
               </div>
             )}
 
-            {!event.registration_open && !(isUpcomingEvent && event.is_paid) && (
+            {!registrationActive && (
               <p className="text-sm text-brand-muted text-center py-4">
-                Registration is closed.
+                {deadlinePassed ? 'Registration deadline has passed.' : 'Registration is closed.'}
               </p>
             )}
           </div>

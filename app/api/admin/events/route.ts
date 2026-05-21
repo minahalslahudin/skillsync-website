@@ -29,6 +29,7 @@ const createSchema = z.object({
   cover_image:           z.string().nullable().optional(),
   form_schema:           z.unknown().optional(),
   is_published:          z.boolean().optional(),
+  registration_open:     z.boolean().optional(),
   content:               z.string().nullable().optional(),
 })
 
@@ -56,11 +57,11 @@ export async function POST(req: NextRequest) {
   const parsed = createSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: 'Validation failed' }, { status: 422 })
 
-  const { is_published, ...rest } = parsed.data
+  const { is_published, registration_open, ...rest } = parsed.data
   const { id, error } = await createEvent({
     ...rest,
     is_published:      is_published ?? false,
-    registration_open: is_published ?? false,
+    registration_open: registration_open ?? true,
     is_online:         false,
     tools_covered:     rest.tools_covered ?? [],
     price:             rest.price ?? 0,

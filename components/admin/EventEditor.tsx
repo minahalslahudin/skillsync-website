@@ -23,6 +23,7 @@ const schema = z.object({
   resources_url:         z.string().nullable().optional(),
   cover_image:           z.string().nullable().optional(),
   content:               z.string().nullable().optional(),
+  registration_open:     z.boolean().default(true),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -81,6 +82,7 @@ export default function EventEditor({ event, onClose, onSaved }: Props) {
       resources_url:         event?.resources_url         ?? '',
       cover_image:           event?.cover_image           ?? '',
       content:               event?.content               ?? '',
+      registration_open:     event?.registration_open     ?? true,
     },
   })
 
@@ -113,6 +115,7 @@ export default function EventEditor({ event, onClose, onSaved }: Props) {
       const payload = {
         ...data,
         is_published:          publish,
+        registration_open:     data.registration_open,
         form_schema:           formFields.length > 0 ? formFields : null,
         brand:                 data.brand                 || null,
         registration_deadline: data.registration_deadline || null,
@@ -210,7 +213,7 @@ export default function EventEditor({ event, onClose, onSaved }: Props) {
               />
             </div>
 
-            <div className="flex items-center gap-4 pt-5">
+            <div className="flex items-center gap-6 pt-5">
               <Controller
                 control={control}
                 name="is_paid"
@@ -223,6 +226,21 @@ export default function EventEditor({ event, onClose, onSaved }: Props) {
                       className="rounded"
                     />
                     Paid Event
+                  </label>
+                )}
+              />
+              <Controller
+                control={control}
+                name="registration_open"
+                render={({ field }) => (
+                  <label className="flex items-center gap-2 text-sm text-zinc-400 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                      className="rounded"
+                    />
+                    Registration Open
                   </label>
                 )}
               />

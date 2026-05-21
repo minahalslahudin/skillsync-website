@@ -32,6 +32,9 @@ export default async function EventDetailPage({ params }: Props) {
   const event = await getEventBySlug(params.slug)
   if (!event || event.type === 'workshop') notFound()
 
+  const now            = new Date()
+  const deadlinePassed = event.registration_deadline ? new Date(event.registration_deadline) < now : false
+  const registrationActive = event.registration_open && !deadlinePassed
   const seatsLeft = event.seats != null ? event.seats - event.seats_taken : null
 
   return (
@@ -96,13 +99,15 @@ export default async function EventDetailPage({ params }: Props) {
               )}
             </div>
 
-            {event.registration_open ? (
+            {registrationActive ? (
               <>
                 <p className="text-sm font-medium text-brand-light mb-4">Register</p>
                 <DynamicEventForm event={event} />
               </>
             ) : (
-              <p className="text-sm text-brand-muted text-center py-4">Registration is closed.</p>
+              <p className="text-sm text-brand-muted text-center py-4">
+                {deadlinePassed ? 'Registration deadline has passed.' : 'Registration is closed.'}
+              </p>
             )}
           </div>
         </div>
