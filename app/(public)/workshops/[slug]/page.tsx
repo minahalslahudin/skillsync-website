@@ -32,7 +32,7 @@ export default async function WorkshopDetailPage({ params }: Props) {
   const now             = new Date()
   const isUpcomingEvent = event.date ? new Date(event.date) > now : false
   const deadlinePassed  = event.registration_deadline ? new Date(event.registration_deadline) < now : false
-  const registrationActive = event.registration_open && !deadlinePassed
+  const registrationActive = event.registration_open && isUpcomingEvent && !deadlinePassed
   const seatsLeft = event.seats != null ? event.seats - event.seats_taken : null
   const fillPct   = event.seats && event.seats > 0
     ? Math.min((event.seats_taken / event.seats) * 100, 100)
