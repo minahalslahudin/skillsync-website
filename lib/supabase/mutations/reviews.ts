@@ -1,16 +1,17 @@
 import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function updateReview(
   id: string,
   data: { body?: string; is_approved?: boolean; is_featured?: boolean }
 ): Promise<{ error: string | null }> {
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
   const { error } = await supabase.from('reviews').update(data).eq('id', id)
   return { error: error?.message ?? null }
 }
 
 export async function deleteReview(id: string): Promise<{ error: string | null }> {
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
   const { error } = await supabase.from('reviews').delete().eq('id', id)
   return { error: error?.message ?? null }
 }

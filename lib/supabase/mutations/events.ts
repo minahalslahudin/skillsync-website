@@ -1,4 +1,5 @@
 import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { Event } from '@/lib/types/app.types'
 
 type EventInput = Omit<Event, 'id' | 'created_at' | 'seats_taken'>
@@ -6,7 +7,7 @@ type EventInput = Omit<Event, 'id' | 'created_at' | 'seats_taken'>
 export async function createEvent(
   data: Partial<EventInput>
 ): Promise<{ id: string | null; error: string | null }> {
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
   const { data: row, error } = await supabase
     .from('events')
     .insert({ ...data, seats_taken: 0, created_at: new Date().toISOString() })
@@ -19,13 +20,13 @@ export async function updateEvent(
   id: string,
   data: Partial<EventInput>
 ): Promise<{ error: string | null }> {
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
   const { error } = await supabase.from('events').update(data).eq('id', id)
   return { error: error?.message ?? null }
 }
 
 export async function deleteEvent(id: string): Promise<{ error: string | null }> {
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
   const { error } = await supabase.from('events').delete().eq('id', id)
   return { error: error?.message ?? null }
 }
@@ -34,7 +35,7 @@ export async function toggleEventPublished(
   id: string,
   published: boolean
 ): Promise<{ error: string | null }> {
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
   const { error } = await supabase
     .from('events')
     .update({ is_published: published })

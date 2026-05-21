@@ -1,13 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { updateReview, deleteReview } from '@/lib/supabase/mutations/reviews'
 
 async function guardAdmin() {
   const supabase = createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
-  const { data: profile } = await supabase.from('users').select('is_admin').eq('id', user.id).single()
+  const admin = createAdminClient()
+  const { data: profile } = await admin.from('users').select('is_admin').eq('id', user.id).single()
   return profile?.is_admin ? user : null
+}
+
+export async function GET(req: NextRequest) {
+  const admin = await guardAdmin()
+  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { searchParams } = new URL(req.url)
+  const tab = searchParams.get('tab') ?? 'pending'
+
+  const db = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let q: any = db.from('reviews').select('*').order('submitted_at', { ascending: false })
+  if (tab === 'pending')  q = q.eq('is_approved', false)
+  if (tab === 'approved') q = q.eq('is_approved', true).eq('is_featured', false)
+  if (tab === 'featured') q = q.eq('is_featured', true)
+
+  const { data, error } = await q
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
 }
 
 export async function PATCH(req: NextRequest) {

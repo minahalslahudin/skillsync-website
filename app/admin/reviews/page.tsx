@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import type { Review } from '@/lib/types/app.types'
 
 type Tab = 'pending' | 'approved' | 'featured'
@@ -17,15 +16,10 @@ export default function AdminReviewsPage() {
     setLoading(true)
     setLoadError(null)
     try {
-      const supabase = createClient()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let q: any = supabase.from('reviews').select('*').order('submitted_at', { ascending: false })
-      if (tab === 'pending')  q = q.eq('is_approved', false)
-      if (tab === 'approved') q = q.eq('is_approved', true).eq('is_featured', false)
-      if (tab === 'featured') q = q.eq('is_featured', true)
-      const { data, error } = await q
-      if (error) throw new Error(error.message)
-      setReviews((data as Review[]) ?? [])
+      const res = await fetch(`/api/admin/reviews?tab=${tab}`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      setReviews(data ?? [])
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : String(err))
     } finally {

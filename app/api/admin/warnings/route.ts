@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { issueWarning, resolveWarning } from '@/lib/supabase/mutations/warnings'
 import { createAnnouncement } from '@/lib/supabase/mutations/announcements'
 
@@ -18,7 +19,8 @@ async function guardAdmin(_req: NextRequest) {
   const supabase = createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
-  const { data: profile } = await supabase.from('users').select('is_admin').eq('id', user.id).single()
+  const admin = createAdminClient()
+  const { data: profile } = await admin.from('users').select('is_admin').eq('id', user.id).single()
   return profile?.is_admin ? user : null
 }
 

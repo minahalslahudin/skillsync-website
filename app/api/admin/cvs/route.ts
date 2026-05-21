@@ -10,7 +10,8 @@ export async function GET(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { data: profile } = await supabase
+  const admin = createAdminClient()
+  const { data: profile } = await admin
     .from('users')
     .select('is_admin')
     .eq('id', user.id)
@@ -28,7 +29,6 @@ export async function GET(req: NextRequest) {
   }
 
   // ── Generate signed URL ────────────────────────────────────────────────────
-  const admin = createAdminClient()
   const { data, error } = await admin.storage
     .from('cvs')
     .createSignedUrl(path, SIGNED_URL_EXPIRY_SECONDS)

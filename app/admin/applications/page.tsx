@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import type { Application } from '@/lib/types/app.types'
 import ApplicationCard from '@/components/admin/ApplicationCard'
 
@@ -22,12 +21,13 @@ export default function AdminApplicationsPage() {
     setLoading(true)
     setLoadError(null)
     try {
-      const supabase = createClient()
-      let query = supabase.from('applications').select('*').order('applied_at', { ascending: false })
-      if (tab !== 'all') query = query.eq('status', tab)
-      const { data, error } = await query
-      if (error) throw new Error(error.message)
-      setApplications((data as Application[]) ?? [])
+      const url = tab === 'all'
+        ? '/api/admin/applications'
+        : `/api/admin/applications?status=${tab}`
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      setApplications(data ?? [])
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : String(err))
     } finally {

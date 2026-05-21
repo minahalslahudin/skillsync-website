@@ -14,14 +14,35 @@ function generatePassword(len = 12): string {
   return Array.from({ length: len }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
 }
 
-export async function PATCH(req: NextRequest) {
+async function guardAdmin() {
   const supabase = createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!user) return null
+  const admin = createAdminClient()
+  const { data: profile } = await admin.from('users').select('is_admin').eq('id', user.id).single()
+  return profile?.is_admin ? user : null
+}
 
-  const { data: adminProfile } = await supabase
-    .from('users').select('is_admin').eq('id', user.id).single()
-  if (!adminProfile?.is_admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+export async function GET(req: NextRequest) {
+  const admin = await guardAdmin()
+  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { searchParams } = new URL(req.url)
+  const status = searchParams.get('status')
+
+  const db = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let q: any = db.from('applications').select('*').order('applied_at', { ascending: false })
+  if (status && status !== 'all') q = q.eq('status', status)
+
+  const { data, error } = await q
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
+}
+
+export async function PATCH(req: NextRequest) {
+  const admin = await guardAdmin()
+  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   let body: unknown
   try { body = await req.json() } catch {
@@ -32,8 +53,9 @@ export async function PATCH(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: 'Validation failed' }, { status: 422 })
 
   const { id, action, adminNotes } = parsed.data
+  const db = createAdminClient()
 
-  const { data: application } = await supabase
+  const { data: application } = await db
     .from('applications')
     .select('*')
     .eq('id', id)
@@ -46,12 +68,11 @@ export async function PATCH(req: NextRequest) {
   }
 
   if (action === 'reject') {
-    await supabase
+    await db
       .from('applications')
       .update({ status: 'rejected', admin_notes: adminNotes ?? null })
       .eq('id', id)
 
-    // Send rejection email (non-fatal)
     const apiKey = process.env.RESEND_API_KEY
     const from = process.env.RESEND_FROM ?? 'onboarding@resend.dev'
     if (apiKey) {
@@ -80,9 +101,8 @@ export async function PATCH(req: NextRequest) {
 
   // Approve: create auth user + insert into public.users
   const tempPassword = generatePassword()
-  const adminClient = createAdminClient()
 
-  const { data: authUser, error: authErr } = await adminClient.auth.admin.createUser({
+  const { data: authUser, error: authErr } = await db.auth.admin.createUser({
     email: app.email,
     password: tempPassword,
     email_confirm: true,
@@ -96,7 +116,7 @@ export async function PATCH(req: NextRequest) {
 
   const newUserId = authUser.user.id
 
-  await supabase.from('users').insert({
+  await db.from('users').insert({
     id: newUserId,
     email: app.email,
     full_name: app.full_name,
@@ -109,12 +129,11 @@ export async function PATCH(req: NextRequest) {
     joined_at: new Date().toISOString(),
   })
 
-  await supabase
+  await db
     .from('applications')
     .update({ status: 'approved', admin_notes: adminNotes ?? null })
     .eq('id', id)
 
-  // Send welcome email (non-fatal)
   const apiKey = process.env.RESEND_API_KEY
   const from = process.env.RESEND_FROM ?? 'onboarding@resend.dev'
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'

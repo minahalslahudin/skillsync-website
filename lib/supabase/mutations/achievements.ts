@@ -1,4 +1,4 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function createAchievement(data: {
   user_id: string
@@ -8,7 +8,7 @@ export async function createAchievement(data: {
   badge_icon?: string | null
   certificate_url?: string | null
 }): Promise<{ error: string | null }> {
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
   const { error } = await supabase.from('achievements').insert({
     ...data,
     earned_at: new Date().toISOString(),

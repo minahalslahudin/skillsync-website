@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
-import { createClient } from '@/lib/supabase/client'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -45,19 +44,22 @@ export default function WorkAssignModal({ open, onClose, volunteers, currentUser
 
   async function onSubmit(data: FormData) {
     setLoading(true)
-    const supabase = createClient()
-    const { error } = await supabase.from('tasks').insert({
-      title:       data.title,
-      description: data.description || null,
-      assigned_to: data.assigned_to,
-      assigned_by: currentUserId,
-      priority:    data.priority,
-      due_date:    data.due_date || null,
-      status:      'not_started',
-      file_urls:   [],
+    const res = await fetch('/api/admin/tasks', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        title:       data.title,
+        description: data.description || null,
+        assigned_to: data.assigned_to,
+        assigned_by: currentUserId,
+        priority:    data.priority,
+        due_date:    data.due_date || null,
+        status:      'not_started',
+        file_urls:   [],
+      }),
     })
     setLoading(false)
-    if (error) {
+    if (!res.ok) {
       toast.error('Failed to create task.')
       return
     }

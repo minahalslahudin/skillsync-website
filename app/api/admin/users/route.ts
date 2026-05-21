@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { ROLES } from '@/lib/constants/roles'
 import { promoteUserRole, changeUserStatus } from '@/lib/supabase/mutations/users'
 import { createAchievement } from '@/lib/supabase/mutations/achievements'
@@ -20,14 +21,38 @@ const schema = z.discriminatedUnion('action', [
   }),
 ])
 
-export async function PATCH(req: NextRequest) {
+async function guardAdmin() {
   const supabase = createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!user) return null
+  const admin = createAdminClient()
+  const { data: profile } = await admin.from('users').select('is_admin, full_name').eq('id', user.id).single()
+  return profile?.is_admin ? { user, adminName: (profile as { full_name?: string }).full_name ?? '' } : null
+}
 
-  const { data: adminProfile } = await supabase
-    .from('users').select('is_admin, full_name').eq('id', user.id).single()
-  if (!adminProfile?.is_admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+export async function GET(req: NextRequest) {
+  const result = await guardAdmin()
+  if (!result) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { searchParams } = new URL(req.url)
+  const status = searchParams.get('status')
+
+  const db = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let q: any = db
+    .from('users')
+    .select('id, full_name, email, avatar_url, role, department, status, warning_count, joined_at, skills')
+  if (status) q = q.eq('status', status)
+
+  const { data, error } = await q
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
+}
+
+export async function PATCH(req: NextRequest) {
+  const result = await guardAdmin()
+  if (!result) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { user } = result
 
   let body: unknown
   try { body = await req.json() } catch {
@@ -43,7 +68,6 @@ export async function PATCH(req: NextRequest) {
     const { error } = await promoteUserRole(userId, role)
     if (error) return NextResponse.json({ error }, { status: 500 })
 
-    // Achievement record
     await createAchievement({
       user_id: userId,
       type: 'milestone',
@@ -51,7 +75,6 @@ export async function PATCH(req: NextRequest) {
       description: note ?? null,
     })
 
-    // Announcement to the promoted user
     await createAnnouncement({
       title: `You've been promoted to ${role}`,
       body: note ?? `Congratulations on your promotion to ${role} at skillSYNC!`,
@@ -63,7 +86,6 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true })
   }
 
-  // status change
   const { userId, status } = parsed.data
   const { error } = await changeUserStatus(userId, status)
   if (error) return NextResponse.json({ error }, { status: 500 })

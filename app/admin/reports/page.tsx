@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import type { ReportWithUser } from '@/lib/supabase/queries/reports'
 import type { ReportEntry } from '@/lib/types/app.types'
 
@@ -25,58 +24,25 @@ export default function AdminReportsPage() {
   const [rate,         setRate]         = useState({ submitted: 0, total: 0 })
 
   useEffect(() => {
-    const supabase = createClient()
-    supabase.from('users').select('id, full_name').eq('status', 'active').order('full_name').then(({ data }) => {
-      setVolunteers((data ?? []) as { id: string; full_name: string }[])
-    })
-
-    // Submission rate for current week
-    const today = new Date()
-    const daysToSunday = today.getDay() === 0 ? 0 : 7 - today.getDay()
-    const sunday = new Date(today)
-    sunday.setDate(today.getDate() + daysToSunday)
-    const weekEnding = sunday.toISOString().split('T')[0]
-
-    Promise.all([
-      supabase.from('users').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-      supabase.from('reports').select('id', { count: 'exact', head: true }).eq('week_ending', weekEnding),
-    ]).then(([{ count: total }, { count: submitted }]) => {
-      setRate({ total: total ?? 0, submitted: submitted ?? 0 })
-    })
+    fetch('/api/admin/users?status=active')
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => setVolunteers((data ?? []) as { id: string; full_name: string }[]))
   }, [])
 
   const load = useCallback(async () => {
     setLoading(true)
     setLoadError(null)
     try {
-      const supabase = createClient()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let q: any = supabase.from('reports').select('*').order('week_ending', { ascending: false }).order('submitted_at', { ascending: false })
-      if (filterWeek)   q = q.eq('week_ending', filterWeek)
-      if (filterUser)   q = q.eq('user_id', filterUser)
-      if (filterStatus) q = q.eq('status', filterStatus)
+      const params = new URLSearchParams()
+      if (filterWeek)   params.set('week',   filterWeek)
+      if (filterUser)   params.set('user',   filterUser)
+      if (filterStatus) params.set('status', filterStatus)
 
-      const { data, error } = await q
-      if (error) throw new Error(error.message)
-      const rows = (data ?? []) as Array<Record<string, unknown> & { user_id: string }>
-      if (rows.length === 0) { setReports([]); return }
-
-      const userIds = Array.from(new Set(rows.map((r) => r.user_id)))
-      const { data: usersData } = await supabase
-        .from('users')
-        .select('id, full_name, avatar_url')
-        .in('id', userIds)
-
-      const userMap: Record<string, { full_name: string; avatar_url: string | null }> = {}
-      for (const u of (usersData ?? []) as Array<{ id: string; full_name: string; avatar_url: string | null }>) {
-        userMap[u.id] = u
-      }
-
-      setReports(rows.map((r) => ({
-        ...(r as unknown as ReportWithUser),
-        user_full_name:  userMap[r.user_id]?.full_name  ?? 'Unknown',
-        user_avatar_url: userMap[r.user_id]?.avatar_url ?? null,
-      })))
+      const res = await fetch(`/api/admin/reports?${params.toString()}`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const { reports: rows, rate: rateData } = await res.json()
+      setReports(rows ?? [])
+      if (rateData) setRate(rateData)
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : String(err))
     } finally {

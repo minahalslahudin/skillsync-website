@@ -1,4 +1,4 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { Warning } from '@/lib/types/app.types'
 
 export async function issueWarning(data: {
@@ -7,7 +7,7 @@ export async function issueWarning(data: {
   reason: string
   severity: Warning['severity']
 }): Promise<{ error: string | null }> {
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
 
   const { error: wErr } = await supabase.from('warnings').insert({
     ...data,
@@ -31,7 +31,7 @@ export async function issueWarning(data: {
 }
 
 export async function resolveWarning(warningId: string): Promise<{ error: string | null }> {
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
   const { error } = await supabase
     .from('warnings')
     .update({ acknowledged_at: new Date().toISOString() })

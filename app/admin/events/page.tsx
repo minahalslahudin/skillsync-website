@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import type { EventWithCount } from '@/lib/supabase/queries/events'
 import EventEditor from '@/components/admin/EventEditor'
 
@@ -22,13 +21,10 @@ export default function AdminEventsPage() {
     setLoading(true)
     setLoadError(null)
     try {
-      const supabase = createClient()
-      const { data, error } = await supabase
-        .from('events')
-        .select('*, registrations(count)')
-        .order('date', { ascending: false })
-      if (error) throw new Error(error.message)
-      setEvents((data as EventWithCount[]) ?? [])
+      const res = await fetch('/api/admin/events')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      setEvents(data ?? [])
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : String(err))
     } finally {

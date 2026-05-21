@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import type { Project } from '@/lib/types/app.types'
 import ProjectEditor from '@/components/admin/ProjectEditor'
 
@@ -16,13 +15,10 @@ export default function AdminProjectsPage() {
     setLoading(true)
     setLoadError(null)
     try {
-      const supabase = createClient()
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('sort_order', { ascending: true })
-      if (error) throw new Error(error.message)
-      setProjects((data as Project[]) ?? [])
+      const res = await fetch('/api/admin/projects')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      setProjects(data ?? [])
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : String(err))
     } finally {

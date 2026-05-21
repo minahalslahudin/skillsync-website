@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { createEvent, updateEvent, deleteEvent, toggleEventPublished } from '@/lib/supabase/mutations/events'
 
 async function guardAdmin() {
   const supabase = createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
-  const { data: profile } = await supabase.from('users').select('is_admin').eq('id', user.id).single()
+  const admin = createAdminClient()
+  const { data: profile } = await admin.from('users').select('is_admin').eq('id', user.id).single()
   return profile?.is_admin ? user : null
 }
 
@@ -29,6 +31,19 @@ const createSchema = z.object({
   is_published:          z.boolean().optional(),
   content:               z.string().nullable().optional(),
 })
+
+export async function GET(_req: NextRequest) {
+  const admin = await guardAdmin()
+  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const db = createAdminClient()
+  const { data, error } = await db
+    .from('events')
+    .select('*, registrations(count)')
+    .order('date', { ascending: false })
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
+}
 
 export async function POST(req: NextRequest) {
   const admin = await guardAdmin()

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import type { Task } from '@/lib/types/app.types'
 import type { VolunteerRow } from '@/lib/supabase/queries/users'
@@ -44,25 +43,22 @@ export default function AdminWorkPage() {
     setLoading(true)
     setLoadError(null)
     try {
-      const supabase = createClient()
-      const { data: tasksData, error: tasksError } = await supabase
-        .from('tasks')
-        .select('*')
-        .order('created_at', { ascending: false })
-      if (tasksError) throw new Error(tasksError.message)
+      const [tasksRes, usersRes] = await Promise.all([
+        fetch('/api/admin/tasks'),
+        fetch('/api/admin/users'),
+      ])
+      if (!tasksRes.ok) throw new Error(`Tasks: HTTP ${tasksRes.status}`)
+      if (!usersRes.ok) throw new Error(`Users: HTTP ${usersRes.status}`)
 
-      const { data: usersData, error: usersError } = await supabase
-        .from('users')
-        .select('id, full_name, email, avatar_url, role, department, status, warning_count, joined_at, skills')
-      if (usersError) throw new Error(usersError.message)
+      const tasksData = (await tasksRes.json()) as Task[]
+      const usersData = (await usersRes.json()) as Array<{ id: string; full_name: string }>
 
       const nameById: Record<string, string> = {}
-      for (const u of (usersData ?? []) as Array<{ id: string; full_name: string }>) {
-        nameById[u.id] = u.full_name
-      }
-      setVolunteers((usersData ?? []) as unknown as VolunteerRow[])
+      for (const u of usersData) nameById[u.id] = u.full_name
+
+      setVolunteers(usersData as unknown as VolunteerRow[])
       setTasks(
-        ((tasksData ?? []) as Task[]).map((t) => ({
+        tasksData.map((t) => ({
           ...t,
           volunteer_name: nameById[t.assigned_to] ?? 'Unknown',
         }))
@@ -85,13 +81,13 @@ export default function AdminWorkPage() {
   async function handleClose() {
     if (!selected) return
     setClosing(true)
-    const supabase = createClient()
-    const { error } = await supabase
-      .from('tasks')
-      .update({ status: 'completed', completed_at: new Date().toISOString() })
-      .eq('id', selected.id)
+    const res = await fetch('/api/admin/tasks', {
+      method:  'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ id: selected.id, status: 'completed', completed_at: new Date().toISOString() }),
+    })
     setClosing(false)
-    if (error) { toast.error('Failed to close task.'); return }
+    if (!res.ok) { toast.error('Failed to close task.'); return }
     toast.success('Task marked complete.')
     setTasks((prev) => prev.map((t) => t.id === selected.id ? { ...t, status: 'completed' } : t))
     setSelected(null)

@@ -1,7 +1,7 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function updateSetting(key: string, value: string): Promise<{ error: unknown }> {
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
   const { error } = await supabase
     .from('site_settings')
     .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
@@ -10,7 +10,7 @@ export async function updateSetting(key: string, value: string): Promise<{ error
 }
 
 export async function updateSettings(settings: Record<string, string>): Promise<{ error: unknown }> {
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
   const rows = Object.entries(settings).map(([key, value]) => ({
     key,
     value,

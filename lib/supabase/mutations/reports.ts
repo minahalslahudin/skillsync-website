@@ -1,4 +1,5 @@
 import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { ReportEntry, Report } from '@/lib/types/app.types'
 
 export async function adminReviewReport(
@@ -6,7 +7,7 @@ export async function adminReviewReport(
   status: Extract<Report['status'], 'approved' | 'rejected'>,
   adminComment: string | null
 ): Promise<{ error: string | null }> {
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
   const { error } = await supabase
     .from('reports')
     .update({ status, admin_comment: adminComment, reviewed_at: new Date().toISOString() })

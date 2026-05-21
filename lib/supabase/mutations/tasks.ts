@@ -1,11 +1,11 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { Task } from '@/lib/types/app.types'
 
 export async function updateTaskStatus(
   taskId: string,
   status: Task['status'],
 ): Promise<{ error: string | null }> {
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
   const update: Record<string, unknown> = { status }
   if (status === 'completed') update.completed_at = new Date().toISOString()
   const { error } = await supabase.from('tasks').update(update).eq('id', taskId)
@@ -20,7 +20,7 @@ export async function createTask(data: {
   priority: Task['priority']
   due_date: string | null
 }): Promise<{ error: string | null }> {
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
   const { error } = await supabase.from('tasks').insert({
     ...data,
     status: 'not_started',
@@ -30,7 +30,7 @@ export async function createTask(data: {
 }
 
 export async function closeTask(taskId: string): Promise<{ error: string | null }> {
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
   const { error } = await supabase
     .from('tasks')
     .update({ status: 'completed', completed_at: new Date().toISOString() })
