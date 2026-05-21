@@ -23,9 +23,9 @@ INSERT INTO public.events (
   tools_covered, form_schema
 ) VALUES (
   'n8n Mastery Workshop',
-  'n8n-mastery-workshop-april-2025',
+  'n8n-mastery-workshop-april-2026',
   'A foundational workshop covering n8n from basics to 7 complete workflows. Topics covered: nodes, databases, APIs, conditionals, and full automation logic.',
-  '2025-04-15 10:00:00+05:00',
+  '2026-04-15 10:00:00+05:00',
   140,
   140,
   'workshop',
@@ -52,9 +52,9 @@ INSERT INTO public.events (
   tools_covered, form_schema
 ) VALUES (
   'n8n Advanced Workshop',
-  'n8n-advanced-workshop-may-2025',
+  'n8n-advanced-workshop-may-2026',
   'An advanced intensive for 10 selected builders. 5 portfolio-level projects built live: WhatsApp Customer Support Bot, NewsDigest AI, Instagram Leads Capture AI, CV Screener AI, AI Bug Triage Reporter.',
-  '2025-05-10 10:00:00+05:00',
+  '2026-05-10 10:00:00+05:00',
   10,
   10,
   'workshop',
@@ -70,7 +70,7 @@ INSERT INTO public.events (
 ON CONFLICT (slug) DO NOTHING;
 
 -- ============================================================
--- Upcoming Workshop — 26 May 2025: n8n Launchpad
+-- Upcoming Workshop — 26 May 2026 : n8n Launchpad
 -- registration_open = false because registration is handled by
 -- the custom /workshops/register form, not the generic form.
 -- ============================================================
@@ -83,9 +83,9 @@ INSERT INTO public.events (
   tools_covered, form_schema
 ) VALUES (
   'n8n Launchpad — From Zero to Portfolio in 5 Hours',
-  'n8n-launchpad-may-2025',
+  'n8n-launchpad-may-2026',
   'A 5-hour, fully hands-on automation workshop designed for anyone who wants to stop watching tutorials and start building real things. In the first 3 hours, you''ll work through 3 live workflows covering the core pillars of modern automation — API integrations, conditional logic, AI-powered flows, and database connections — with zero assumed knowledge and zero fluff. The final 2 hours are a guided project: you''ll build a CV Screener + Notion Talent Board, a production-ready automation you can immediately add to your portfolio. Taught live by practising Automation Engineers who build these systems professionally — not educators reading slides.',
-  '2025-05-26 10:00:00+05:00',
+  '2026-05-26 10:00:00+05:00',
   30,
   0,
   'workshop',

@@ -5,11 +5,11 @@ import WorkshopRegistrationForm from '@/components/forms/WorkshopRegistrationFor
 export const metadata: Metadata = {
   title: 'Register — n8n Launchpad | skillSYNC',
   description:
-    'Secure your seat at the n8n Launchpad. 5 hours, fully hands-on, portfolio-ready automation workshop on 26 May 2025.',
+    'Secure your seat at the n8n Launchpad. 5 hours, fully hands-on, portfolio-ready automation workshop on 25 May 2026.',
 }
 
 const DETAILS = [
-  { label: 'Date',     value: 'Mon, 26 May 2025' },
+  { label: 'Date',     value: 'Mon, 25 May 2026' },
   { label: 'Duration', value: '5 Hours' },
   { label: 'Price',    value: 'Rs 450' },
   { label: 'Format',   value: 'Live Online' },
@@ -26,7 +26,7 @@ export default function WorkshopRegisterPage() {
         </Link>
         <span>/</span>
         <Link
-          href="/workshops/n8n-launchpad-may-2025"
+          href="/workshops/n8n-launchpad-may-2026"
           className="hover:text-brand-accent transition-colors"
         >
           n8n Launchpad
