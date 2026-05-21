@@ -82,7 +82,7 @@ export default function WorkshopRegistrationForm() {
     const fd = new FormData()
     Object.entries(values).forEach(([k, v]) => fd.append(k, String(v)))
     fd.append('payment_receipt', receiptFile)
-    fd.append('workshop_id', 'n8n-launchpad-may-2025')
+    fd.append('workshop_id', 'n8n-launchpad-may-2026')
 
     const res = await fetch('/api/workshop-register', { method: 'POST', body: fd })
     if (res.ok) {
@@ -272,7 +272,7 @@ export default function WorkshopRegistrationForm() {
         </label>
         <p className="text-xs text-brand-muted">
           Upload screenshot or PDF of your payment receipt. Your seat is only confirmed after
-          payment is verified by our team.
+          payment is verified by our team. (Bank details: PK62UNIL0109000344269745)
         </p>
         <div
           role="button"
