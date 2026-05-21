@@ -159,6 +159,23 @@ export interface Achievement {
   badge_icon: string | null
 }
 
+export interface WorkshopRegistration {
+  id: string
+  created_at: string
+  full_name: string
+  email: string
+  phone: string
+  university: string
+  semester: string
+  skill_level: string
+  reason: string
+  committed: boolean
+  referral_source: string
+  payment_receipt_url: string | null
+  workshop_id: string
+  status: 'pending' | 'confirmed' | 'rejected'
+}
+
 export interface Warning {
   id: string
   user_id: string

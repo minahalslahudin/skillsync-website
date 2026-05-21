@@ -12,8 +12,8 @@ interface WorkshopCardProps {
 
 export default function WorkshopCard({ event }: WorkshopCardProps) {
   const isUpcoming = event.date ? new Date(event.date) > new Date() : false
-  const seatsLeft = event.seats != null ? event.seats - event.seats_taken : null
-  const fillPct =
+  const seatsLeft  = event.seats != null ? event.seats - event.seats_taken : null
+  const fillPct    =
     event.seats && event.seats > 0
       ? Math.min((event.seats_taken / event.seats) * 100, 100)
       : null
@@ -43,8 +43,15 @@ export default function WorkshopCard({ event }: WorkshopCardProps) {
             </span>
           )}
 
+          {!isUpcoming && event.date && (
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-brand-muted px-2 py-0.5 rounded-full bg-brand-muted/10 border border-brand-muted/20">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-muted" />
+              Completed
+            </span>
+          )}
+
           {event.is_paid ? (
-            <Badge variant="warning">Paid · R{event.price}</Badge>
+            <Badge variant="warning">Paid · Rs {event.price}</Badge>
           ) : (
             <Badge variant="success">Free</Badge>
           )}
@@ -76,11 +83,21 @@ export default function WorkshopCard({ event }: WorkshopCardProps) {
           </div>
         )}
 
-        {/* Seats progress bar */}
-        {fillPct !== null && (
+        {/* Past workshop attendee count */}
+        {!isUpcoming && event.seats_taken > 0 && (
+          <div className="flex items-center gap-2 text-xs text-brand-muted">
+            <span className="flex items-center gap-1">
+              <span className="text-brand-accent font-semibold text-sm">{event.seats_taken}</span>
+              {' '}people attended
+            </span>
+          </div>
+        )}
+
+        {/* Seats progress bar — shown for upcoming or limited-seat events */}
+        {fillPct !== null && isUpcoming && (
           <div className="flex flex-col gap-1.5">
             <div className="flex justify-between text-xs text-brand-muted">
-              <span>{event.seats_taken} attending</span>
+              <span>{event.seats_taken} registered</span>
               {seatsLeft !== null && <span>{seatsLeft} seats left</span>}
             </div>
             <div className="h-1.5 rounded-full bg-brand-muted/20 overflow-hidden">
@@ -93,16 +110,27 @@ export default function WorkshopCard({ event }: WorkshopCardProps) {
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between mt-auto pt-3 border-t border-brand-muted/15">
+        <div className="flex items-center justify-between mt-auto pt-3 border-t border-brand-muted/15 gap-3 flex-wrap">
           {event.date && (
             <span className="text-xs text-brand-muted">{formatDate(event.date)}</span>
           )}
-          <Link
-            href={`/workshops/${event.slug}`}
-            className="text-xs font-semibold text-brand-accent hover:underline transition-colors ml-auto"
-          >
-            View details →
-          </Link>
+
+          {/* Upcoming paid workshop — prominent CTA */}
+          {isUpcoming && event.is_paid ? (
+            <Link
+              href="/workshops/register"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-brand-accent hover:bg-[#c73652] px-3 py-1.5 rounded-lg transition-colors duration-200 ml-auto flex-shrink-0"
+            >
+              Register Now — Rs {event.price}
+            </Link>
+          ) : (
+            <Link
+              href={`/workshops/${event.slug}`}
+              className="text-xs font-semibold text-brand-accent hover:underline transition-colors ml-auto"
+            >
+              View details →
+            </Link>
+          )}
         </div>
       </div>
     </motion.div>

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
+import Link from 'next/link'
 import { getEventBySlug } from '@/lib/supabase/queries/events'
 import { formatDate } from '@/lib/utils/formatDate'
 import Badge from '@/components/ui/Badge'
@@ -28,6 +29,7 @@ export default async function WorkshopDetailPage({ params }: Props) {
   const event = await getEventBySlug(params.slug)
   if (!event || event.type !== 'workshop') notFound()
 
+  const isUpcomingEvent = event.date ? new Date(event.date) > new Date() : false
   const seatsLeft = event.seats != null ? event.seats - event.seats_taken : null
   const fillPct   = event.seats && event.seats > 0
     ? Math.min((event.seats_taken / event.seats) * 100, 100)
@@ -185,7 +187,26 @@ export default async function WorkshopDetailPage({ params }: Props) {
                 <DynamicEventForm event={event} />
               </>
             )}
-            {!event.registration_open && (
+
+            {/* Upcoming paid workshop — custom registration form */}
+            {!event.registration_open && isUpcomingEvent && event.is_paid && (
+              <div className="flex flex-col gap-3">
+                <p className="text-sm text-gray-400 leading-relaxed">
+                  Registration is open. Complete your registration and payment to secure your seat.
+                </p>
+                <Link
+                  href="/workshops/register"
+                  className="w-full inline-flex items-center justify-center gap-2 font-bold text-white bg-brand-accent hover:bg-[#c73652] px-5 py-3 rounded-lg transition-colors duration-200 text-sm"
+                >
+                  Register Now — Rs {event.price}
+                </Link>
+                <p className="text-xs text-brand-muted text-center">
+                  Seats are limited · Confirmed after payment verification
+                </p>
+              </div>
+            )}
+
+            {!event.registration_open && !(isUpcomingEvent && event.is_paid) && (
               <p className="text-sm text-brand-muted text-center py-4">
                 Registration is closed.
               </p>
