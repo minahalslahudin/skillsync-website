@@ -14,18 +14,26 @@ const TYPE_BADGE: Record<string, string> = {
 export default function AdminEventsPage() {
   const [events,      setEvents]      = useState<EventWithCount[]>([])
   const [loading,     setLoading]     = useState(true)
+  const [loadError,   setLoadError]   = useState<string | null>(null)
   const [editorOpen,  setEditorOpen]  = useState(false)
   const [editing,     setEditing]     = useState<EventWithCount | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('events')
-      .select('*, registrations(count)')
-      .order('date', { ascending: false })
-    setEvents((data as EventWithCount[]) ?? [])
-    setLoading(false)
+    setLoadError(null)
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('events')
+        .select('*, registrations(count)')
+        .order('date', { ascending: false })
+      if (error) throw new Error(error.message)
+      setEvents((data as EventWithCount[]) ?? [])
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => { load() }, [load])
@@ -76,6 +84,17 @@ export default function AdminEventsPage() {
 
       {loading ? (
         <div className="text-zinc-500 text-sm text-center py-16">Loading…</div>
+      ) : loadError ? (
+        <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-6 py-12 text-center">
+          <p className="text-sm font-semibold text-red-400 mb-1">Failed to load events</p>
+          <p className="text-xs text-red-400/70 font-mono break-all">{loadError}</p>
+          <button
+            onClick={load}
+            className="mt-4 text-xs text-zinc-400 hover:text-zinc-200 underline"
+          >
+            Try again
+          </button>
+        </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-brand-muted/20">
           <table className="w-full text-sm">
