@@ -37,11 +37,30 @@ function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 
+// form_schema can arrive as an array [], an object {fields:[...]}, or null
+// depending on how/when the event was created. Normalise to a plain array.
+function normalizeFormSchema(schema: unknown): FormField[] {
+  if (!schema) return []
+  if (Array.isArray(schema)) return schema as FormField[]
+  if (typeof schema === 'object' && schema !== null) {
+    const obj = schema as { fields?: unknown }
+    if (Array.isArray(obj.fields)) return obj.fields as FormField[]
+  }
+  return []
+}
+
+// ISO timestamps from Supabase (e.g. "2025-04-15T05:00:00+00:00") need
+// slicing to "YYYY-MM-DD" for <input type="date"> to display correctly.
+function toDateInput(value: string | null | undefined): string {
+  if (!value) return ''
+  return value.slice(0, 10)
+}
+
 export default function EventEditor({ event, onClose, onSaved }: Props) {
   const [saving,     setSaving]     = useState(false)
   const [apiError,   setApiError]   = useState<string | null>(null)
   const [formFields, setFormFields] = useState<FormField[]>(
-    (event?.form_schema as FormField[] | null) ?? []
+    normalizeFormSchema(event?.form_schema)
   )
   const [toolInput, setToolInput] = useState('')
 
@@ -53,8 +72,8 @@ export default function EventEditor({ event, onClose, onSaved }: Props) {
       description:           event?.description           ?? '',
       type:                  event?.type                  ?? 'workshop',
       brand:                 event?.brand                 ?? '',
-      date:                  event?.date                  ?? '',
-      registration_deadline: event?.registration_deadline ?? '',
+      date:                  toDateInput(event?.date),
+      registration_deadline: toDateInput(event?.registration_deadline),
       seats:                 event?.seats                 ?? null,
       is_paid:               event?.is_paid               ?? false,
       price:                 event?.price                 ?? 0,

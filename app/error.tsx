@@ -50,7 +50,19 @@ export default function GlobalError({
         </div>
 
         {error.digest && (
-          <p className="mt-8 text-xs text-zinc-600">Error ID: {error.digest}</p>
+          <p className="mt-4 text-xs text-zinc-600">Error ID: {error.digest}</p>
+        )}
+
+        {process.env.NODE_ENV === 'development' && (
+          <details className="mt-6 text-left w-full max-w-xl">
+            <summary className="text-xs text-zinc-600 cursor-pointer hover:text-zinc-400 select-none">
+              Error details (dev only)
+            </summary>
+            <pre className="mt-2 text-xs text-red-400/80 bg-zinc-900/80 border border-zinc-800 rounded-lg p-4 overflow-auto whitespace-pre-wrap break-all leading-relaxed">
+              {error.message}
+              {error.stack ? '\n\n' + error.stack : ''}
+            </pre>
+          </details>
         )}
       </body>
     </html>
