@@ -33,6 +33,7 @@ export default function AdminWorkPage() {
   const [tasks, setTasks]               = useState<TaskWithUser[]>([])
   const [volunteers, setVolunteers]     = useState<VolunteerRow[]>([])
   const [loading, setLoading]           = useState(true)
+  const [loadError, setLoadError]       = useState<string | null>(null)
   const [showAssign, setShowAssign]     = useState(false)
   const [selected, setSelected]         = useState<TaskWithUser | null>(null)
   const [filterStatus, setFilterStatus] = useState<Task['status'] | 'all'>('all')
@@ -40,28 +41,37 @@ export default function AdminWorkPage() {
   const [closing, setClosing]           = useState(false)
 
   const loadTasks = useCallback(async () => {
-    const supabase = createClient()
-    const { data: tasksData } = await supabase
-      .from('tasks')
-      .select('*')
-      .order('created_at', { ascending: false })
+    setLoading(true)
+    setLoadError(null)
+    try {
+      const supabase = createClient()
+      const { data: tasksData, error: tasksError } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('created_at', { ascending: false })
+      if (tasksError) throw new Error(tasksError.message)
 
-    const { data: usersData } = await supabase
-      .from('users')
-      .select('id, full_name, email, avatar_url, role, department, status, warning_count, joined_at, skills')
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select('id, full_name, email, avatar_url, role, department, status, warning_count, joined_at, skills')
+      if (usersError) throw new Error(usersError.message)
 
-    const nameById: Record<string, string> = {}
-    for (const u of (usersData ?? []) as Array<{ id: string; full_name: string }>) {
-      nameById[u.id] = u.full_name
+      const nameById: Record<string, string> = {}
+      for (const u of (usersData ?? []) as Array<{ id: string; full_name: string }>) {
+        nameById[u.id] = u.full_name
+      }
+      setVolunteers((usersData ?? []) as unknown as VolunteerRow[])
+      setTasks(
+        ((tasksData ?? []) as Task[]).map((t) => ({
+          ...t,
+          volunteer_name: nameById[t.assigned_to] ?? 'Unknown',
+        }))
+      )
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setLoading(false)
     }
-    setVolunteers((usersData ?? []) as unknown as VolunteerRow[])
-    setTasks(
-      ((tasksData ?? []) as Task[]).map((t) => ({
-        ...t,
-        volunteer_name: nameById[t.assigned_to] ?? 'Unknown',
-      }))
-    )
-    setLoading(false)
   }, [])
 
   useEffect(() => { loadTasks() }, [loadTasks])
@@ -127,6 +137,12 @@ export default function AdminWorkPage() {
       {/* Tasks table */}
       {loading ? (
         <p className="text-brand-muted text-sm">Loading…</p>
+      ) : loadError ? (
+        <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-6 py-12 text-center">
+          <p className="text-sm font-semibold text-red-400 mb-1">Failed to load tasks</p>
+          <p className="text-xs text-red-400/70 font-mono break-all">{loadError}</p>
+          <button onClick={loadTasks} className="mt-4 text-xs text-zinc-400 hover:text-zinc-200 underline">Try again</button>
+        </div>
       ) : displayed.length === 0 ? (
         <p className="text-brand-muted text-sm py-12 text-center rounded-xl border border-brand-muted/20">No tasks found.</p>
       ) : (

@@ -8,18 +8,26 @@ import ProjectEditor from '@/components/admin/ProjectEditor'
 export default function AdminProjectsPage() {
   const [projects,   setProjects]   = useState<Project[]>([])
   const [loading,    setLoading]    = useState(true)
+  const [loadError,  setLoadError]  = useState<string | null>(null)
   const [editorOpen, setEditorOpen] = useState(false)
   const [editing,    setEditing]    = useState<Project | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('projects')
-      .select('*')
-      .order('sort_order', { ascending: true })
-    setProjects((data as Project[]) ?? [])
-    setLoading(false)
+    setLoadError(null)
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('sort_order', { ascending: true })
+      if (error) throw new Error(error.message)
+      setProjects((data as Project[]) ?? [])
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => { load() }, [load])
@@ -60,6 +68,12 @@ export default function AdminProjectsPage() {
 
       {loading ? (
         <div className="text-zinc-500 text-sm text-center py-16">Loading…</div>
+      ) : loadError ? (
+        <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-6 py-12 text-center">
+          <p className="text-sm font-semibold text-red-400 mb-1">Failed to load projects</p>
+          <p className="text-xs text-red-400/70 font-mono break-all">{loadError}</p>
+          <button onClick={load} className="mt-4 text-xs text-zinc-400 hover:text-zinc-200 underline">Try again</button>
+        </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-brand-muted/20">
           <table className="w-full text-sm">

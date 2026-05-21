@@ -7,22 +7,30 @@ import type { Review } from '@/lib/types/app.types'
 type Tab = 'pending' | 'approved' | 'featured'
 
 export default function AdminReviewsPage() {
-  const [tab,      setTab]      = useState<Tab>('pending')
-  const [reviews,  setReviews]  = useState<Review[]>([])
-  const [loading,  setLoading]  = useState(true)
-  const [editBody, setEditBody] = useState<{ id: string; body: string } | null>(null)
+  const [tab,       setTab]       = useState<Tab>('pending')
+  const [reviews,   setReviews]   = useState<Review[]>([])
+  const [loading,   setLoading]   = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [editBody,  setEditBody]  = useState<{ id: string; body: string } | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
-    const supabase = createClient()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let q: any = supabase.from('reviews').select('*').order('submitted_at', { ascending: false })
-    if (tab === 'pending')  q = q.eq('is_approved', false)
-    if (tab === 'approved') q = q.eq('is_approved', true).eq('is_featured', false)
-    if (tab === 'featured') q = q.eq('is_featured', true)
-    const { data } = await q
-    setReviews((data as Review[]) ?? [])
-    setLoading(false)
+    setLoadError(null)
+    try {
+      const supabase = createClient()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let q: any = supabase.from('reviews').select('*').order('submitted_at', { ascending: false })
+      if (tab === 'pending')  q = q.eq('is_approved', false)
+      if (tab === 'approved') q = q.eq('is_approved', true).eq('is_featured', false)
+      if (tab === 'featured') q = q.eq('is_featured', true)
+      const { data, error } = await q
+      if (error) throw new Error(error.message)
+      setReviews((data as Review[]) ?? [])
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setLoading(false)
+    }
   }, [tab])
 
   useEffect(() => { load() }, [load])
@@ -85,6 +93,12 @@ export default function AdminReviewsPage() {
 
       {loading ? (
         <div className="text-zinc-500 text-sm text-center py-16">Loading…</div>
+      ) : loadError ? (
+        <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-6 py-12 text-center">
+          <p className="text-sm font-semibold text-red-400 mb-1">Failed to load reviews</p>
+          <p className="text-xs text-red-400/70 font-mono break-all">{loadError}</p>
+          <button onClick={load} className="mt-4 text-xs text-zinc-400 hover:text-zinc-200 underline">Try again</button>
+        </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {reviews.map((rev) => (

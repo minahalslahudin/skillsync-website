@@ -11,8 +11,11 @@ function useSettings() {
 
   useEffect(() => {
     fetch('/api/admin/settings')
-      .then((r) => r.json())
-      .then((data: Settings) => { setSettings(data); setLoading(false) })
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json() as Promise<Settings>
+      })
+      .then((data) => { setSettings(data); setLoading(false) })
       .catch(() => setLoading(false))
   }, [])
 

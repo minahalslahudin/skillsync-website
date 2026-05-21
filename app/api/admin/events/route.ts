@@ -44,15 +44,13 @@ export async function POST(req: NextRequest) {
   const { is_published, ...rest } = parsed.data
   const { id, error } = await createEvent({
     ...rest,
-    start_date: rest.date,
-    is_published: is_published ?? false,
+    is_published:      is_published ?? false,
     registration_open: is_published ?? false,
-    is_online: false,
-    max_capacity: rest.seats ?? null,
-    tools_covered: rest.tools_covered ?? [],
-    price: rest.price ?? 0,
-    is_paid: rest.is_paid ?? false,
-    form_schema: (rest.form_schema as Record<string, unknown> | null) ?? null,
+    is_online:         false,
+    tools_covered:     rest.tools_covered ?? [],
+    price:             rest.price ?? 0,
+    is_paid:           rest.is_paid ?? false,
+    form_schema:       (rest.form_schema as Record<string, unknown> | null) ?? null,
   })
   if (error) return NextResponse.json({ error }, { status: 500 })
   return NextResponse.json({ id })
