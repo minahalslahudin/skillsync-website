@@ -5,8 +5,8 @@ export async function middleware(request: NextRequest) {
   const { supabase, user, response } = await createMiddlewareClient(request)
   const { pathname } = request.nextUrl
 
-  // Already authenticated → skip login page
-  if (pathname.startsWith('/login') && user) {
+  // Already authenticated volunteer → skip volunteer login page
+  if (pathname === '/login' && user) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
@@ -17,22 +17,42 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // /admin — require session AND is_admin = true
-  if (pathname.startsWith('/admin')) {
+  // /admin (but NOT /admin/login — that IS the auth page)
+  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+    // No session → send to admin login
     if (!user) {
-      const url = new URL('/login', request.url)
-      url.searchParams.set('redirectTo', pathname)
-      return NextResponse.redirect(url)
+      return NextResponse.redirect(new URL('/admin/login', request.url))
     }
 
     const { data: profile } = await supabase
       .from('users')
-      .select('is_admin')
+      .select('is_admin, role')
       .eq('id', user.id)
       .single()
 
-    if (!profile?.is_admin) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+    const isAdmin =
+      (profile as { is_admin: boolean; role: string } | null)?.is_admin === true ||
+      (profile as { is_admin: boolean; role: string } | null)?.role === 'Admin'
+
+    if (!isAdmin) {
+      return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
+  }
+
+  // Already-authed admin visits /admin/login → bounce to dashboard
+  if (pathname === '/admin/login' && user) {
+    const { data: profile } = await supabase
+      .from('users')
+      .select('is_admin, role')
+      .eq('id', user.id)
+      .single()
+
+    const isAdmin =
+      (profile as { is_admin: boolean; role: string } | null)?.is_admin === true ||
+      (profile as { is_admin: boolean; role: string } | null)?.role === 'Admin'
+
+    if (isAdmin) {
+      return NextResponse.redirect(new URL('/admin/dashboard', request.url))
     }
   }
 
@@ -65,7 +85,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Run on all paths except static assets and Next.js internals
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
