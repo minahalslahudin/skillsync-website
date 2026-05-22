@@ -272,7 +272,7 @@ export default function WorkshopRegistrationForm() {
         </label>
         <p className="text-xs text-yellow-400">
           Upload screenshot or PDF of your payment receipt. Your seat is only confirmed after
-          payment is verified by our team. (Bank details: PK62UNIL0109000344269745)
+          payment is verified by our team. (Bank details: PK62UNIL0109000344269745 - Title: Minahal Salahudin)
         </p>
         <div
           role="button"
