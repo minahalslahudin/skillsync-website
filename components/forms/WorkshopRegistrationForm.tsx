@@ -270,7 +270,7 @@ export default function WorkshopRegistrationForm() {
           Payment Receipt
           <span className="text-red-400 ml-1">*</span>
         </label>
-        <p className="text-xs text-brand-muted">
+        <p className="text-xs text-yellow-400">
           Upload screenshot or PDF of your payment receipt. Your seat is only confirmed after
           payment is verified by our team. (Bank details: PK62UNIL0109000344269745)
         </p>
