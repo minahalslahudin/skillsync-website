@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   const reason          = formData.get('reason')?.toString().trim() ?? ''
   const committed       = formData.get('committed')?.toString() === 'true'
   const referral_source = formData.get('referral_source')?.toString().trim() ?? ''
-  const workshop_id     = formData.get('workshop_id')?.toString().trim() || 'n8n-launchpad-may-2025'
+  const workshop_id     = formData.get('workshop_id')?.toString().trim() || 'n8n-launchpad-may-2026'
   const receiptFile     = formData.get('payment_receipt') as File | null
 
   if (!full_name || !email || !phone || !university || !semester || !skill_level || !reason || !referral_source) {
@@ -88,6 +88,22 @@ export async function POST(req: NextRequest) {
   if (insertError) {
     console.error('[workshop-register] insert:', insertError.message)
     return NextResponse.json({ error: 'Registration failed. Please try again.' }, { status: 500 })
+  }
+
+  // Keep events.seats_taken in sync so capacity checks elsewhere stay accurate
+  try {
+    const { data: eventRow } = await adminClient
+      .from('events')
+      .select('id')
+      .eq('slug', workshop_id)
+      .single()
+    if (eventRow) {
+      await adminClient.rpc('increment_seats_taken', { event_id: eventRow.id })
+    }
+  } catch (err) {
+    // Non-fatal: the registration was already saved; seats_taken will be corrected
+    // by the next query that reads from workshop_registrations directly.
+    console.warn('[workshop-register] increment_seats_taken skipped:', err)
   }
 
   return NextResponse.json({ success: true })

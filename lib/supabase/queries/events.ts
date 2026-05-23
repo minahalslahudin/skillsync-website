@@ -1,4 +1,5 @@
 import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { Event } from '@/lib/types/app.types'
 
 export type EventWithCount = Event & { registrations: Array<{ count: number }> }
@@ -68,7 +69,28 @@ export async function getPublishedWorkshops(limit = 6): Promise<Event[]> {
     .order('date', { ascending: true })
     .limit(limit)
   if (error) console.error('[events] getPublishedWorkshops:', error.message)
-  return (data as Event[]) ?? []
+
+  const events = (data as Event[]) ?? []
+  if (events.length === 0) return events
+
+  // Fetch real registration counts from workshop_registrations.
+  // Uses admin client because RLS restricts reads to admins only.
+  const admin = createAdminClient()
+  const slugs = events.map(e => e.slug)
+  const { data: regRows } = await admin
+    .from('workshop_registrations')
+    .select('workshop_id')
+    .in('workshop_id', slugs)
+
+  const regCounts: Record<string, number> = {}
+  for (const row of (regRows ?? []) as Array<{ workshop_id: string }>) {
+    regCounts[row.workshop_id] = (regCounts[row.workshop_id] ?? 0) + 1
+  }
+
+  return events.map(e => ({
+    ...e,
+    seats_taken: e.is_paid ? (regCounts[e.slug] ?? 0) : e.seats_taken,
+  }))
 }
 
 export async function getUpcomingEvents(limit = 6): Promise<Event[]> {
@@ -107,5 +129,19 @@ export async function getEventBySlug(slug: string): Promise<Event | null> {
     .eq('is_published', true)
     .single()
   if (error) console.error('[events] getEventBySlug:', error.message)
-  return (data as Event) ?? null
+
+  const event = (data as Event) ?? null
+  if (!event) return null
+
+  // For paid workshops, override seats_taken with the real count from workshop_registrations
+  if (event.is_paid && event.type === 'workshop') {
+    const admin = createAdminClient()
+    const { count } = await admin
+      .from('workshop_registrations')
+      .select('*', { count: 'exact', head: true })
+      .eq('workshop_id', slug)
+    return { ...event, seats_taken: count ?? 0 }
+  }
+
+  return event
 }

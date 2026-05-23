@@ -97,8 +97,8 @@ export default function WorkshopCard({ event }: WorkshopCardProps) {
         {fillPct !== null && isUpcoming && (
           <div className="flex flex-col gap-1.5">
             <div className="flex justify-between text-xs text-brand-muted">
-              <span>{event.seats_taken} registered</span>
-              {seatsLeft !== null && <span>{seatsLeft} seats left</span>}
+              {event.seats_taken > 0 && <span>{event.seats_taken} registered</span>}
+              {seatsLeft !== null && <span className="ml-auto">{seatsLeft} seats left</span>}
             </div>
             <div className="h-1.5 rounded-full bg-brand-muted/20 overflow-hidden">
               <div

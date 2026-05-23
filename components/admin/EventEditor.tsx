@@ -50,7 +50,7 @@ function normalizeFormSchema(schema: unknown): FormField[] {
   return []
 }
 
-// ISO timestamps from Supabase (e.g. "2025-04-15T05:00:00+00:00") need
+// ISO timestamps from Supabase (e.g. "2026-04-15T05:00:00+00:00") need
 // slicing to "YYYY-MM-DD" for <input type="date"> to display correctly.
 function toDateInput(value: string | null | undefined): string {
   if (!value) return ''

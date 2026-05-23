@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS public.workshop_registrations (
   committed           boolean     NOT NULL,
   referral_source     text        NOT NULL,
   payment_receipt_url text,
-  workshop_id         text        NOT NULL DEFAULT 'n8n-launchpad-may-2025',
+  workshop_id         text        NOT NULL DEFAULT 'n8n-launchpad-may-2026',
   status              text        NOT NULL DEFAULT 'pending',
   CONSTRAINT workshop_registrations_status_check
     CHECK (status IN ('pending', 'confirmed', 'rejected'))
