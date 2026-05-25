@@ -5,31 +5,25 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import type { Project } from '@/lib/types/app.types'
 import ProjectCard from '@/components/public/ProjectCard'
 
-type FilterValue = 'all' | 'skillit' | 'skillsync' | 'ongoing'
+type FilterValue = 'all' | 'make' | 'n8n'
 
 const FILTERS: { label: string; value: FilterValue }[] = [
-  { label: 'All',       value: 'all' },
-  { label: 'skillIT',   value: 'skillit' },
-  { label: 'skillSYNC', value: 'skillsync' },
-  { label: 'Ongoing',   value: 'ongoing' },
+  { label: 'All',      value: 'all' },
+  { label: 'Make.com', value: 'make' },
+  { label: 'n8n',      value: 'n8n' },
 ]
 
-interface ProjectsFilterGridProps {
-  projects: Project[]
-}
-
-export default function ProjectsFilterGrid({ projects }: ProjectsFilterGridProps) {
-  const router      = useRouter()
-  const pathname    = usePathname()
+export default function ProjectsFilterGrid({ projects }: { projects: Project[] }) {
+  const router       = useRouter()
+  const pathname     = usePathname()
   const searchParams = useSearchParams()
   const filter = (searchParams.get('filter') ?? 'all') as FilterValue
 
   const filtered = useMemo(() => {
     switch (filter) {
-      case 'skillit':   return projects.filter((p) => p.brand === 'skillit')
-      case 'skillsync': return projects.filter((p) => p.brand === 'skillsync')
-      case 'ongoing':   return projects.filter((p) => p.is_ongoing)
-      default:          return projects
+      case 'make': return projects.filter((p) => p.tool === 'Make.com')
+      case 'n8n':  return projects.filter((p) => p.tool === 'n8n')
+      default:     return projects
     }
   }, [projects, filter])
 
@@ -50,8 +44,8 @@ export default function ProjectsFilterGrid({ projects }: ProjectsFilterGridProps
             onClick={() => setFilter(value)}
             className={`text-sm px-4 py-1.5 rounded-full border transition-colors duration-200 ${
               filter === value
-                ? 'bg-brand-accent text-white border-brand-accent'
-                : 'border-brand-muted/30 text-brand-muted hover:border-brand-accent/50 hover:text-brand-light'
+                ? 'bg-[#0F6B7A] text-white border-[#0F6B7A]'
+                : 'border-brand-muted/30 text-brand-muted hover:border-[#0F6B7A]/50 hover:text-brand-light'
             }`}
           >
             {label}

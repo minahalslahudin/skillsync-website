@@ -45,6 +45,15 @@ export async function PATCH(req: NextRequest) {
   return error ? NextResponse.json({ error }, { status: 500 }) : NextResponse.json({ success: true })
 }
 
+export async function PUT(req: NextRequest) {
+  const admin = await guardAdmin()
+  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { id, ...data } = await req.json() as { id: string; [k: string]: unknown }
+  if (!id) return NextResponse.json({ error: 'id required' }, { status: 422 })
+  const { error } = await updateProject(id, data as Parameters<typeof updateProject>[1])
+  return error ? NextResponse.json({ error }, { status: 500 }) : NextResponse.json({ success: true })
+}
+
 export async function DELETE(req: NextRequest) {
   const admin = await guardAdmin()
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

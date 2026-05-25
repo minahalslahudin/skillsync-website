@@ -75,11 +75,10 @@ export default function AdminProjectsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-brand-muted/20 bg-brand-surface/50 text-zinc-500 text-left text-xs">
-                <th className="px-4 py-3 font-medium">#</th>
                 <th className="px-4 py-3 font-medium">Title</th>
-                <th className="px-4 py-3 font-medium">Brand</th>
-                <th className="px-4 py-3 font-medium">Category</th>
-                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Tool</th>
+                <th className="px-4 py-3 font-medium">Industry</th>
+                <th className="px-4 py-3 font-medium">Builder</th>
                 <th className="px-4 py-3 font-medium">Published</th>
                 <th className="px-4 py-3 font-medium">Actions</th>
               </tr>
@@ -87,17 +86,13 @@ export default function AdminProjectsPage() {
             <tbody className="divide-y divide-brand-muted/10">
               {projects.map((p) => (
                 <tr key={p.id} className="hover:bg-brand-surface/40 transition-colors">
-                  <td className="px-4 py-3 text-zinc-500">{p.sort_order}</td>
-                  <td className="px-4 py-3 font-medium text-zinc-200">{p.title}</td>
-                  <td className="px-4 py-3 text-zinc-400">{p.brand ?? '—'}</td>
-                  <td className="px-4 py-3 text-zinc-400">{p.category ?? '—'}</td>
                   <td className="px-4 py-3">
-                    {p.is_ongoing ? (
-                      <span className="text-xs px-2 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">Ongoing</span>
-                    ) : (
-                      <span className="text-xs px-2 py-0.5 rounded bg-zinc-500/10 text-zinc-400 border border-zinc-500/20">Completed</span>
-                    )}
+                    <p className="font-medium text-zinc-200">{p.title}</p>
+                    {p.tagline && <p className="text-xs text-zinc-500 mt-0.5 truncate max-w-[200px]">{p.tagline}</p>}
                   </td>
+                  <td className="px-4 py-3 text-zinc-400">{p.tool ?? '—'}</td>
+                  <td className="px-4 py-3 text-zinc-400">{p.industry ?? '—'}</td>
+                  <td className="px-4 py-3 text-zinc-400">{p.builder_name ?? '—'}</td>
                   <td className="px-4 py-3">
                     <button
                       onClick={() => togglePublished(p.id, p.is_published)}

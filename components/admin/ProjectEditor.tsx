@@ -1,28 +1,33 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import type { Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import Image from 'next/image'
-import { createClient } from '@/lib/supabase/client'
 import type { Project } from '@/lib/types/app.types'
+
+const howItWorksSchema = z.object({ title: z.string().min(1), description: z.string().min(1) })
+const featureSchema    = z.object({ title: z.string().min(1), description: z.string().min(1) })
+const resultSchema     = z.object({ value: z.string().min(1) })
+const techItemSchema   = z.object({ tool: z.string().min(1), role: z.string().min(1) })
 
 const schema = z.object({
   title:             z.string().min(2, 'Title required'),
+  tagline:           z.string().nullable().optional(),
   slug:              z.string().min(2, 'Slug required'),
-  description:       z.string().min(10, 'Description too short'),
-  short_description: z.string().nullable().optional(),
-  brand:             z.string().nullable().optional(),
-  category:          z.string().nullable().optional(),
-  tech_tags:         z.array(z.string()).default([]),
-  is_ongoing:        z.boolean().default(false),
+  tool:              z.string().nullable().optional(),
+  industry:          z.string().nullable().optional(),
+  builder_name:      z.string().nullable().optional(),
+  builder_role:      z.string().nullable().optional(),
+  problem_statement: z.string().nullable().optional(),
+  how_it_works:      z.array(howItWorksSchema).default([]),
+  key_features:      z.array(featureSchema).default([]),
+  results:           z.array(resultSchema).default([]),
+  tech_stack:        z.array(techItemSchema).default([]),
+  time_saved:        z.string().nullable().optional(),
+  money_saved:       z.string().nullable().optional(),
   is_published:      z.boolean().default(false),
-  live_url:          z.string().nullable().optional(),
-  repo_url:          z.string().nullable().optional(),
-  sort_order:        z.number().default(0),
-  content:           z.string().nullable().optional(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -38,66 +43,41 @@ function slugify(s: string) {
 }
 
 export default function ProjectEditor({ project, onClose, onSaved }: Props) {
-  const [saving,     setSaving]     = useState(false)
-  const [apiError,   setApiError]   = useState<string | null>(null)
-  const [tagInput,   setTagInput]   = useState('')
-  const [imageUrls,  setImageUrls]  = useState<string[]>(project?.image_urls ?? [])
-  const [uploading,  setUploading]  = useState(false)
+  const [saving,   setSaving]   = useState(false)
+  const [apiError, setApiError] = useState<string | null>(null)
 
-  const { register, handleSubmit, watch, setValue, control, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(schema) as Resolver<FormValues>,
-    defaultValues: {
-      title:             project?.title             ?? '',
-      slug:              project?.slug              ?? '',
-      description:       project?.description       ?? '',
-      short_description: project?.short_description ?? '',
-      brand:             project?.brand             ?? '',
-      category:          project?.category          ?? '',
-      tech_tags:         project?.tech_tags         ?? [],
-      is_ongoing:        project?.is_ongoing        ?? false,
-      is_published:      project?.is_published      ?? false,
-      live_url:          project?.live_url          ?? '',
-      repo_url:          project?.repo_url          ?? '',
-      sort_order:        project?.sort_order        ?? 0,
-      content:           project?.content           ?? '',
-    },
-  })
+  const { register, handleSubmit, watch, setValue, control, formState: { errors } } =
+    useForm<FormValues>({
+      resolver: zodResolver(schema) as Resolver<FormValues>,
+      defaultValues: {
+        title:             project?.title             ?? '',
+        tagline:           project?.tagline           ?? '',
+        slug:              project?.slug              ?? '',
+        tool:              project?.tool              ?? '',
+        industry:          project?.industry          ?? '',
+        builder_name:      project?.builder_name      ?? '',
+        builder_role:      project?.builder_role      ?? '',
+        problem_statement: project?.problem_statement ?? '',
+        how_it_works:      (project?.how_it_works     ?? []) as { title: string; description: string }[],
+        key_features:      (project?.key_features     ?? []) as { title: string; description: string }[],
+        results:           ((project?.results         ?? []) as string[]).map(v => ({ value: v })),
+        tech_stack:        (project?.tech_stack       ?? []) as { tool: string; role: string }[],
+        time_saved:        project?.time_saved        ?? '',
+        money_saved:       project?.money_saved       ?? '',
+        is_published:      project?.is_published      ?? false,
+      },
+    })
 
   const titleValue = watch('title')
-  const techTags   = watch('tech_tags')
 
   useEffect(() => {
     if (!project && titleValue) setValue('slug', slugify(titleValue))
   }, [titleValue, project, setValue])
 
-  function addTag() {
-    const t = tagInput.trim()
-    if (!t) return
-    setValue('tech_tags', [...(techTags ?? []), t])
-    setTagInput('')
-  }
-
-  function removeTag(t: string) {
-    setValue('tech_tags', (techTags ?? []).filter((x) => x !== t))
-  }
-
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files
-    if (!files || files.length === 0) return
-    setUploading(true)
-    const supabase = createClient()
-    const uploaded: string[] = []
-    for (const file of Array.from(files)) {
-      const path = `projects/${Date.now()}-${file.name.replace(/\s+/g, '_')}`
-      const { error } = await supabase.storage.from('public').upload(path, file)
-      if (!error) {
-        const { data: { publicUrl } } = supabase.storage.from('public').getPublicUrl(path)
-        uploaded.push(publicUrl)
-      }
-    }
-    setImageUrls((prev) => [...prev, ...uploaded])
-    setUploading(false)
-  }
+  const howItWorksArr = useFieldArray({ control, name: 'how_it_works' })
+  const keyFeatArr    = useFieldArray({ control, name: 'key_features' })
+  const resultsArr    = useFieldArray({ control, name: 'results' })
+  const techStackArr  = useFieldArray({ control, name: 'tech_stack' })
 
   async function submit(data: FormValues) {
     setSaving(true)
@@ -105,16 +85,18 @@ export default function ProjectEditor({ project, onClose, onSaved }: Props) {
     try {
       const payload = {
         ...data,
-        image_urls:        imageUrls,
-        brand:             data.brand             || null,
-        category:          data.category          || null,
-        short_description: data.short_description || null,
-        live_url:          data.live_url          || null,
-        repo_url:          data.repo_url          || null,
-        content:           data.content           || null,
+        tagline:           data.tagline           || null,
+        tool:              data.tool              || null,
+        industry:          data.industry          || null,
+        builder_name:      data.builder_name      || null,
+        builder_role:      data.builder_role      || null,
+        problem_statement: data.problem_statement || null,
+        time_saved:        data.time_saved        || null,
+        money_saved:       data.money_saved       || null,
+        results:           data.results.map(r => r.value),
       }
       const res = await fetch('/api/admin/projects', {
-        method:  project?.id ? 'PATCH' : 'POST',
+        method:  project?.id ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(project?.id ? { id: project.id, ...payload } : payload),
       })
@@ -139,134 +121,246 @@ export default function ProjectEditor({ project, onClose, onSaved }: Props) {
           <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200">✕</button>
         </div>
 
-        <form onSubmit={handleSubmit(submit)} className="p-4 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+        <form onSubmit={handleSubmit(submit)} className="p-4 space-y-6">
 
-            <div className="col-span-2">
+          {/* Basic Info */}
+          <section className="space-y-3">
+            <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Basic Info</p>
+
+            <div>
               <label className="label-sm">Title</label>
               <input {...register('title')} className="input-field w-full mt-1" />
               {errors.title && <p className="text-red-400 text-xs mt-1">{errors.title.message}</p>}
             </div>
 
             <div>
-              <label className="label-sm">Slug</label>
-              <input {...register('slug')} className="input-field w-full mt-1" />
-              {errors.slug && <p className="text-red-400 text-xs mt-1">{errors.slug.message}</p>}
+              <label className="label-sm">Tagline</label>
+              <input {...register('tagline')} className="input-field w-full mt-1" placeholder="One punchy line" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label-sm">Slug</label>
+                <input {...register('slug')} className="input-field w-full mt-1" />
+                {errors.slug && <p className="text-red-400 text-xs mt-1">{errors.slug.message}</p>}
+              </div>
+              <div>
+                <label className="label-sm">Tool</label>
+                <input {...register('tool')} className="input-field w-full mt-1" placeholder="Make.com, n8n…" />
+              </div>
             </div>
 
             <div>
-              <label className="label-sm">Sort Order</label>
-              <input {...register('sort_order', { valueAsNumber: true })} type="number" className="input-field w-full mt-1" />
+              <label className="label-sm">Industry</label>
+              <input {...register('industry')} className="input-field w-full mt-1" placeholder="e.g. Real Estate" />
             </div>
+          </section>
 
-            <div>
-              <label className="label-sm">Brand</label>
-              <input {...register('brand')} className="input-field w-full mt-1" placeholder="skillSYNC / skillIT" />
+          {/* Builder */}
+          <section className="space-y-3">
+            <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Builder</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label-sm">Builder Name</label>
+                <input {...register('builder_name')} className="input-field w-full mt-1" />
+              </div>
+              <div>
+                <label className="label-sm">Builder Role</label>
+                <input {...register('builder_role')} className="input-field w-full mt-1" placeholder="e.g. AI Intern" />
+              </div>
             </div>
+          </section>
 
-            <div>
-              <label className="label-sm">Category</label>
-              <input {...register('category')} className="input-field w-full mt-1" placeholder="e.g. Web App" />
-            </div>
+          {/* Problem Statement */}
+          <section className="space-y-3">
+            <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Problem Statement</p>
+            <textarea
+              {...register('problem_statement')}
+              rows={3}
+              className="input-field w-full resize-none"
+              placeholder="What problem does this solve?"
+            />
+          </section>
 
-            <div className="col-span-2">
-              <label className="label-sm">Short Description</label>
-              <input {...register('short_description')} className="input-field w-full mt-1" placeholder="One-liner for cards" />
-            </div>
-
-            <div className="col-span-2">
-              <label className="label-sm">Description</label>
-              <textarea {...register('description')} rows={3} className="input-field w-full mt-1 resize-none" />
-              {errors.description && <p className="text-red-400 text-xs mt-1">{errors.description.message}</p>}
-            </div>
-
-            <div>
-              <label className="label-sm">Live URL</label>
-              <input {...register('live_url')} className="input-field w-full mt-1" placeholder="https://…" />
-            </div>
-
-            <div>
-              <label className="label-sm">Repo URL</label>
-              <input {...register('repo_url')} className="input-field w-full mt-1" placeholder="https://github.com/…" />
-            </div>
-
-            <div className="col-span-2">
-              <label className="label-sm">Tech Tags</label>
-              <div className="flex gap-2 mt-1 mb-2">
+          {/* How It Works */}
+          <section className="space-y-3">
+            <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">How It Works</p>
+            {howItWorksArr.fields.map((field, i) => (
+              <div key={field.id} className="rounded-lg border border-brand-muted/20 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-zinc-500">Step {i + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => howItWorksArr.remove(i)}
+                    className="text-xs text-red-400/60 hover:text-red-400"
+                  >
+                    Remove
+                  </button>
+                </div>
                 <input
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag() } }}
+                  {...register(`how_it_works.${i}.title`)}
+                  className="input-field w-full"
+                  placeholder="Step title"
+                />
+                <textarea
+                  {...register(`how_it_works.${i}.description`)}
+                  rows={2}
+                  className="input-field w-full resize-none"
+                  placeholder="Step description"
+                />
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => howItWorksArr.append({ title: '', description: '' })}
+              className="text-xs text-brand-accent border border-brand-accent/20 px-3 py-1.5 rounded hover:bg-brand-accent/5"
+            >
+              + Add Step
+            </button>
+          </section>
+
+          {/* Key Features */}
+          <section className="space-y-3">
+            <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Key Features</p>
+            {keyFeatArr.fields.map((field, i) => (
+              <div key={field.id} className="rounded-lg border border-brand-muted/20 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-zinc-500">Feature {i + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => keyFeatArr.remove(i)}
+                    className="text-xs text-red-400/60 hover:text-red-400"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <input
+                  {...register(`key_features.${i}.title`)}
+                  className="input-field w-full"
+                  placeholder="Feature name"
+                />
+                <textarea
+                  {...register(`key_features.${i}.description`)}
+                  rows={2}
+                  className="input-field w-full resize-none"
+                  placeholder="Feature description"
+                />
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => keyFeatArr.append({ title: '', description: '' })}
+              className="text-xs text-brand-accent border border-brand-accent/20 px-3 py-1.5 rounded hover:bg-brand-accent/5"
+            >
+              + Add Feature
+            </button>
+          </section>
+
+          {/* Results */}
+          <section className="space-y-3">
+            <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Results</p>
+            {resultsArr.fields.map((field, i) => (
+              <div key={field.id} className="flex gap-2 items-center">
+                <input
+                  {...register(`results.${i}.value`)}
                   className="input-field flex-1"
-                  placeholder="e.g. Next.js"
+                  placeholder="e.g. Saved 3 hours daily"
                 />
                 <button
                   type="button"
-                  onClick={addTag}
-                  className="px-3 py-1.5 rounded bg-brand-accent/10 border border-brand-accent/20 text-brand-accent text-sm hover:bg-brand-accent/20"
+                  onClick={() => resultsArr.remove(i)}
+                  className="text-zinc-500 hover:text-red-400 px-2 text-sm"
                 >
-                  Add
+                  ✕
                 </button>
               </div>
-              <div className="flex flex-wrap gap-1.5">
-                {(techTags ?? []).map((tag) => (
-                  <span key={tag} className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-brand-accent/10 text-brand-accent border border-brand-accent/20">
-                    {tag}
-                    <button type="button" onClick={() => removeTag(tag)} className="opacity-60 hover:opacity-100">✕</button>
-                  </span>
-                ))}
+            ))}
+            <button
+              type="button"
+              onClick={() => resultsArr.append({ value: '' })}
+              className="text-xs text-brand-accent border border-brand-accent/20 px-3 py-1.5 rounded hover:bg-brand-accent/5"
+            >
+              + Add Result
+            </button>
+          </section>
+
+          {/* Tech Stack */}
+          <section className="space-y-3">
+            <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Tech Stack</p>
+            {techStackArr.fields.map((field, i) => (
+              <div key={field.id} className="grid grid-cols-2 gap-2 items-center">
+                <input
+                  {...register(`tech_stack.${i}.tool`)}
+                  className="input-field w-full"
+                  placeholder="Tool name"
+                />
+                <div className="flex gap-2">
+                  <input
+                    {...register(`tech_stack.${i}.role`)}
+                    className="input-field flex-1"
+                    placeholder="Role / purpose"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => techStackArr.remove(i)}
+                    className="text-zinc-500 hover:text-red-400 px-2 text-sm"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => techStackArr.append({ tool: '', role: '' })}
+              className="text-xs text-brand-accent border border-brand-accent/20 px-3 py-1.5 rounded hover:bg-brand-accent/5"
+            >
+              + Add Tool
+            </button>
+          </section>
+
+          {/* Impact */}
+          <section className="space-y-3">
+            <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Impact</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label-sm">Time Saved</label>
+                <input
+                  {...register('time_saved')}
+                  className="input-field w-full mt-1"
+                  placeholder="3–4 hours per day"
+                />
+              </div>
+              <div>
+                <label className="label-sm">Money Saved</label>
+                <input
+                  {...register('money_saved')}
+                  className="input-field w-full mt-1"
+                  placeholder="PKR 30,000–60,000/client"
+                />
               </div>
             </div>
+          </section>
 
-            <div className="col-span-2">
-              <label className="label-sm">Project Images</label>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImageUpload}
-                className="mt-1 text-xs text-zinc-400 file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:bg-brand-muted/20 file:text-zinc-300 hover:file:bg-brand-muted/30"
-              />
-              {uploading && <p className="text-xs text-zinc-500 mt-1">Uploading…</p>}
-              <div className="flex flex-wrap gap-2 mt-2">
-                {imageUrls.map((url) => (
-                  <div key={url} className="relative group w-16 h-16 rounded border border-brand-muted/30 overflow-hidden">
-                    <Image src={url} alt="" fill className="object-cover" sizes="64px" />
-                    <button
-                      type="button"
-                      onClick={() => setImageUrls((p) => p.filter((u) => u !== url))}
-                      className="absolute inset-0 bg-black/60 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 text-xs"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-6 col-span-2">
-              <Controller
-                control={control}
-                name="is_ongoing"
-                render={({ field }) => (
-                  <label className="flex items-center gap-2 text-sm text-zinc-400 cursor-pointer">
-                    <input type="checkbox" checked={field.value} onChange={(e) => field.onChange(e.target.checked)} className="rounded" />
-                    Ongoing
-                  </label>
-                )}
-              />
-              <Controller
-                control={control}
-                name="is_published"
-                render={({ field }) => (
-                  <label className="flex items-center gap-2 text-sm text-zinc-400 cursor-pointer">
-                    <input type="checkbox" checked={field.value} onChange={(e) => field.onChange(e.target.checked)} className="rounded" />
-                    Published
-                  </label>
-                )}
-              />
-            </div>
-          </div>
+          {/* Publish */}
+          <section>
+            <Controller
+              control={control}
+              name="is_published"
+              render={({ field }) => (
+                <label className="flex items-center gap-3 text-sm text-zinc-400 cursor-pointer select-none">
+                  <button
+                    type="button"
+                    onClick={() => field.onChange(!field.value)}
+                    className={`relative inline-flex w-10 h-5 rounded-full transition-colors focus:outline-none ${field.value ? 'bg-brand-accent' : 'bg-zinc-700'}`}
+                  >
+                    <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${field.value ? 'translate-x-5' : ''}`} />
+                  </button>
+                  Published
+                </label>
+              )}
+            />
+          </section>
 
           {apiError && <p className="text-red-400 text-sm">{apiError}</p>}
 

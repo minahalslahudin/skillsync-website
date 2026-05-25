@@ -1,0 +1,14 @@
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS tagline text;
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS builder_name text;
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS builder_role text;
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS tool text;
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS industry text;
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS problem_statement text;
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS how_it_works jsonb;
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS key_features jsonb;
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS results jsonb;
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS tech_stack jsonb;
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS time_saved text;
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS money_saved text;
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS project_type text DEFAULT 'automation';
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS slug text;

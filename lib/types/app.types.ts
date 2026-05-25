@@ -79,7 +79,6 @@ export interface Project {
   cover_image: string | null
   image_urls: string[]
   category: string | null
-  tags: string[]
   tech_tags: string[]
   live_url: string | null
   repo_url: string | null
@@ -88,6 +87,19 @@ export interface Project {
   is_ongoing: boolean
   sort_order: number
   created_at: string
+  tagline: string | null
+  builder_name: string | null
+  builder_role: string | null
+  tool: string | null
+  industry: string | null
+  problem_statement: string | null
+  how_it_works: { title: string; description: string }[] | null
+  key_features: { title: string; description: string }[] | null
+  results: string[] | null
+  tech_stack: { tool: string; role: string }[] | null
+  time_saved: string | null
+  money_saved: string | null
+  project_type: string | null
 }
 
 export interface FormField {
