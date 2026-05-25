@@ -116,7 +116,7 @@ export default function EventEditor({ event, onClose, onSaved }: Props) {
         ...data,
         is_published:          publish,
         registration_open:     data.registration_open,
-        form_schema:           formFields.length > 0 ? formFields : null,
+        form_schema:           formFields,
         brand:                 data.brand                 || null,
         registration_deadline: data.registration_deadline || null,
         resources_url:         data.resources_url         || null,
