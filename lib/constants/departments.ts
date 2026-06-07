@@ -1,9 +1,8 @@
 export const DEPARTMENTS = [
   'CEO Office',
-  'Finance & Revenue',
   'Growth & Brand',
-  'Operations & Systems',
   'Technology & Platform',
+  'Operations Office',
 ] as const
 
 export type Department = typeof DEPARTMENTS[number]
