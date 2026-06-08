@@ -211,7 +211,7 @@ export default function WorkshopRegistrationForm() {
       {/* 7. Reason */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-brand-light">
-          Why do you want to attend this workshop?
+          Why do you want to attend this workshop and which role are you interested in?
           <span className="text-red-400 ml-1">*</span>
         </label>
         <textarea
