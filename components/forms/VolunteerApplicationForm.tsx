@@ -342,7 +342,7 @@ export default function VolunteerApplicationForm() {
         <div className="flex flex-col gap-1.5">
           <div className="flex justify-between items-baseline">
             <label className="text-sm font-medium text-brand-light">
-              Why do you want to join? <span className="text-red-400">*</span>
+              Why do you want to join and which role are you interested in? <span className="text-red-400">*</span>
             </label>
             <span className={`text-xs tabular-nums ${motivationLen >= 100 ? 'text-green-400' : 'text-brand-muted'}`}>
               {motivationLen} / 100
