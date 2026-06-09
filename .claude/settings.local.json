@@ -13,7 +13,8 @@
       "Bash(npx tsc *)",
       "PowerShell(Get-ChildItem \"D:\\\\2026\\\\skillit website\\\\skillsync-website\" | Where-Object { $_.Name -ne \"node_modules\" } | Select-Object Name, PSIsContainer)",
       "PowerShell(Get-ChildItem \"D:\\\\2026\\\\skillit website\\\\skillsync-website\\\\app\" -Recurse | Where-Object { -not $_.PSIsContainer } | Select-Object FullName)",
-      "PowerShell(Get-ChildItem \"D:\\\\2026\\\\skillit website\\\\skillsync-website\\\\lib\" -Recurse | Where-Object { -not $_.PSIsContainer } | Select-Object FullName; Get-ChildItem \"D:\\\\2026\\\\skillit website\\\\skillsync-website\\\\scripts\" -Recurse | Select-Object FullName; Get-ChildItem \"D:\\\\2026\\\\skillit website\\\\skillsync-website\\\\supabase\" -Recurse | Select-Object FullName)"
+      "PowerShell(Get-ChildItem \"D:\\\\2026\\\\skillit website\\\\skillsync-website\\\\lib\" -Recurse | Where-Object { -not $_.PSIsContainer } | Select-Object FullName; Get-ChildItem \"D:\\\\2026\\\\skillit website\\\\skillsync-website\\\\scripts\" -Recurse | Select-Object FullName; Get-ChildItem \"D:\\\\2026\\\\skillit website\\\\skillsync-website\\\\supabase\" -Recurse | Select-Object FullName)",
+      "PowerShell(New-Item *)"
     ]
   }
 }

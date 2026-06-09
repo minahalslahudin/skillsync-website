@@ -1,4 +1,5 @@
 import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export type TeamMemberWithUser = {
   id: string
@@ -18,27 +19,29 @@ export type TeamMemberWithUser = {
   }
 }
 
+const TEAM_SELECT = `
+  id,
+  user_id,
+  is_public,
+  display_order,
+  custom_title,
+  users (
+    full_name,
+    avatar_url,
+    role,
+    department,
+    bio,
+    linkedin,
+    github,
+    portfolio
+  )
+`
+
 export async function getPublicTeamMembers(): Promise<TeamMemberWithUser[]> {
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('team_members')
-    .select(`
-      id,
-      user_id,
-      is_public,
-      display_order,
-      custom_title,
-      users (
-        full_name,
-        avatar_url,
-        role,
-        department,
-        bio,
-        linkedin,
-        github,
-        portfolio
-      )
-    `)
+    .select(TEAM_SELECT)
     .eq('is_public', true)
     .order('display_order', { ascending: true })
   if (error) console.error('[users] getPublicTeamMembers:', error.message)
@@ -49,23 +52,7 @@ export async function getAllTeamMembers(): Promise<TeamMemberWithUser[]> {
   const supabase = createServerClient()
   const { data, error } = await supabase
     .from('team_members')
-    .select(`
-      id,
-      user_id,
-      is_public,
-      display_order,
-      custom_title,
-      users (
-        full_name,
-        avatar_url,
-        role,
-        department,
-        bio,
-        linkedin,
-        github,
-        portfolio
-      )
-    `)
+    .select(TEAM_SELECT)
     .order('display_order', { ascending: true })
   if (error) console.error('[users] getAllTeamMembers:', error.message)
   return (data as unknown as TeamMemberWithUser[]) ?? []
