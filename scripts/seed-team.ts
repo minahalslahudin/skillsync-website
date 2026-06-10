@@ -40,7 +40,7 @@ const teamData: {
     displayRole: 'Founder & Strategic Lead',
     dbRole: 'C-Suite',
     department: 'Leadership',
-    bio: 'BS CyberSec | Automation Engineer at Trillies AI | Built Finora AI (Google Hackathon) | Organized Promptopia | Lead multiple technical societies | Full-stack, ML/LLMs, LangGraph',
+    bio: 'BS CyberSec | Automation Engineer | Built Finora AI (Google Hackathon) | Organized Promptopia | Lead multiple technical societies | Full-stack, ML/LLMs, LangGraph',
     image_url: '/team/minahal-salahudin.jpg',
     is_public: true,
     order: 1,
