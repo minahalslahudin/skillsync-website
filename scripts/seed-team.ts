@@ -48,7 +48,7 @@ const teamData: {
   {
     name: 'Amani Jumaloon',
     email: 'amani@team.skillsync.internal',
-    displayRole: 'Technical & Curriculum Lead',
+    displayRole: 'Curriculum Lead',
     dbRole: 'Lead',
     department: 'Technology',
     bio: 'BS CyberSec | AI/ML & Automation | Full-Stack Dev | Built EVOX — full-stack society management web app',
@@ -70,7 +70,7 @@ const teamData: {
   {
     name: 'Burhan Aslam',
     email: 'burhan@team.skillsync.internal',
-    displayRole: 'Trainer & Operations',
+    displayRole: 'Technical Projects Lead',
     dbRole: 'Lead',
     department: 'Operations',
     bio: 'BS Software Engineering | VP FAST LADS | Automation & Agentic AI Specialist | International client experience | Multiple Pakistan software houses',
@@ -81,7 +81,7 @@ const teamData: {
   {
     name: 'Zaid Rizwan',
     email: 'zaid@team.skillsync.internal',
-    displayRole: 'Growth & Strategy',
+    displayRole: 'Automation Specialist',
     dbRole: 'Lead',
     department: 'Growth',
     bio: 'BS Business Analytics | Automation Specialist | Intern at Prudential Solutions | Power BI, SQL, n8n, Make.com | Atomcamp Ambassador at FAST-NUCES',
@@ -97,7 +97,7 @@ const teamData: {
     department: 'Operations',
     bio: 'BS FinTech | AI Dev & QA at ADEPT Inc | Built Enterprise HRMS & DeepDefense (Voice Phishing Detection with Deep Learning)',
     image_url: '/team/muskan-ahmad.jpg',
-    is_public: true,
+    is_public: false,
     order: 6,
   },
   {
