@@ -67,6 +67,8 @@ export interface Event {
   tools_covered: string[]
   resources_url: string | null
   brand: string | null
+  external_registration_url: string | null
+  hide_seats_display: boolean | null
 }
 
 export interface Project {

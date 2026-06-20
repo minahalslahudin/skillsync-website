@@ -90,7 +90,7 @@ export default async function WorkshopDetailPage({ params }: Props) {
           )}
 
           {/* Attendee stats */}
-          {(event.seats_taken > 0 || seatsLeft !== null) && (
+          {!event.external_registration_url && (event.seats_taken > 0 || seatsLeft !== null) && (
             <div className="mt-8 grid grid-cols-2 gap-4">
               <div className="rounded-xl border border-brand-muted/20 bg-brand-mid p-4 text-center">
                 <p className="text-2xl font-display font-black text-brand-accent">
@@ -110,7 +110,7 @@ export default async function WorkshopDetailPage({ params }: Props) {
           )}
 
           {/* Capacity bar */}
-          {fillPct !== null && (
+          {fillPct !== null && !event.external_registration_url && (
             <div className="mt-4 flex flex-col gap-1.5">
               <div className="flex justify-between text-xs text-brand-muted">
                 <span>Capacity</span>
@@ -166,7 +166,7 @@ export default async function WorkshopDetailPage({ params }: Props) {
                   </span>
                 </div>
               )}
-              {seatsLeft != null && (
+              {seatsLeft != null && !event.external_registration_url && (
                 <div className="flex justify-between">
                   <span>Seats left</span>
                   <span className={seatsLeft <= 5 ? 'text-red-400' : 'text-brand-light'}>
@@ -184,35 +184,48 @@ export default async function WorkshopDetailPage({ params }: Props) {
               )}
             </div>
 
-            {registrationActive && !event.is_paid && (
+            {event.external_registration_url ? (
+              <a
+                href={event.external_registration_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full inline-flex items-center justify-center gap-2 font-bold text-white bg-brand-accent hover:bg-[#c73652] px-5 py-3 rounded-lg transition-colors duration-200 text-sm"
+              >
+                Register Now
+              </a>
+            ) : (
               <>
-                <p className="text-sm font-medium text-brand-light mb-4">Register</p>
-                <DynamicEventForm event={event} />
+                {registrationActive && !event.is_paid && (
+                  <>
+                    <p className="text-sm font-medium text-brand-light mb-4">Register</p>
+                    <DynamicEventForm event={event} />
+                  </>
+                )}
+
+                {/* Upcoming paid workshop — custom registration form */}
+                {registrationActive && event.is_paid && (
+                  <div className="flex flex-col gap-3">
+                    <p className="text-sm text-gray-400 leading-relaxed">
+                      Registration is open. Complete your registration and payment to secure your seat.
+                    </p>
+                    <Link
+                      href="/workshops/register"
+                      className="w-full inline-flex items-center justify-center gap-2 font-bold text-white bg-brand-accent hover:bg-[#c73652] px-5 py-3 rounded-lg transition-colors duration-200 text-sm"
+                    >
+                      Register Now — Rs {event.price}
+                    </Link>
+                    <p className="text-xs text-brand-muted text-center">
+                      Seats are limited · Confirmed after payment verification
+                    </p>
+                  </div>
+                )}
+
+                {!registrationActive && (
+                  <p className="text-sm text-brand-muted text-center py-4">
+                    {deadlinePassed ? 'Registration deadline has passed.' : 'Registration is closed.'}
+                  </p>
+                )}
               </>
-            )}
-
-            {/* Upcoming paid workshop — custom registration form */}
-            {registrationActive && event.is_paid && (
-              <div className="flex flex-col gap-3">
-                <p className="text-sm text-gray-400 leading-relaxed">
-                  Registration is open. Complete your registration and payment to secure your seat.
-                </p>
-                <Link
-                  href="/workshops/register"
-                  className="w-full inline-flex items-center justify-center gap-2 font-bold text-white bg-brand-accent hover:bg-[#c73652] px-5 py-3 rounded-lg transition-colors duration-200 text-sm"
-                >
-                  Register Now — Rs {event.price}
-                </Link>
-                <p className="text-xs text-brand-muted text-center">
-                  Seats are limited · Confirmed after payment verification
-                </p>
-              </div>
-            )}
-
-            {!registrationActive && (
-              <p className="text-sm text-brand-muted text-center py-4">
-                {deadlinePassed ? 'Registration deadline has passed.' : 'Registration is closed.'}
-              </p>
             )}
           </div>
         </div>

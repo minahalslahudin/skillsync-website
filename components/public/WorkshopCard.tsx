@@ -84,7 +84,7 @@ export default function WorkshopCard({ event }: WorkshopCardProps) {
         )}
 
         {/* Past workshop attendee count */}
-        {!isUpcoming && event.seats_taken > 0 && (
+        {!isUpcoming && event.seats_taken > 0 && !event.hide_seats_display && (
           <div className="flex items-center gap-2 text-xs text-brand-muted">
             <span className="flex items-center gap-1">
               <span className="text-brand-accent font-semibold text-sm">{event.seats_taken}</span>
@@ -94,7 +94,7 @@ export default function WorkshopCard({ event }: WorkshopCardProps) {
         )}
 
         {/* Seats progress bar — shown for upcoming or limited-seat events */}
-        {fillPct !== null && isUpcoming && (
+        {fillPct !== null && isUpcoming && !event.hide_seats_display && (
           <div className="flex flex-col gap-1.5">
             <div className="flex justify-between text-xs text-brand-muted">
               {event.seats_taken > 0 && <span>{event.seats_taken} registered</span>}
@@ -117,12 +117,23 @@ export default function WorkshopCard({ event }: WorkshopCardProps) {
 
           {/* Upcoming paid workshop — prominent CTA */}
           {isUpcoming && event.is_paid ? (
-            <Link
-              href="/workshops/register"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-brand-accent hover:bg-[#c73652] px-3 py-1.5 rounded-lg transition-colors duration-200 ml-auto flex-shrink-0"
-            >
-              Register Now — Rs {event.price}
-            </Link>
+            event.external_registration_url ? (
+              <a
+                href={event.external_registration_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-brand-accent hover:bg-[#c73652] px-3 py-1.5 rounded-lg transition-colors duration-200 ml-auto flex-shrink-0"
+              >
+                Register Now — Rs {event.price}
+              </a>
+            ) : (
+              <Link
+                href="/workshops/register"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-brand-accent hover:bg-[#c73652] px-3 py-1.5 rounded-lg transition-colors duration-200 ml-auto flex-shrink-0"
+              >
+                Register Now — Rs {event.price}
+              </Link>
+            )
           ) : (
             <Link
               href={`/workshops/${event.slug}`}
