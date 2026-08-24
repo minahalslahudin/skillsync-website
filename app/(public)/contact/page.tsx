@@ -1,34 +1,37 @@
 import ContactForm from '@/components/forms/ContactForm'
+import SectionHeader from '@/components/public/SectionHeader'
 
 const CONTACT_INFO = [
-  { label: 'Email',    value: 'skillit.co@gmail.com',       href: 'mailto:skillit.co@gmail.com' },
-  { label: 'LinkedIn', value: 'linkedin.com/company/skillsync-za', href: 'https://www.linkedin.com/company/skill-synchronized' },
-  { label: 'GitHub',   value: 'github.com/skillsync-za',     href: 'https://github.com/skillitco' },
+  { label: 'Email',    value: 'skillit.co@gmail.com',                    href: 'mailto:skillit.co@gmail.com' },
+  { label: 'LinkedIn', value: 'linkedin.com/company/skillsync-za',       href: 'https://www.linkedin.com/company/skill-synchronized' },
+  { label: 'GitHub',   value: 'github.com/skillitco',                    href: 'https://github.com/skillitco' },
 ]
 
 export default function ContactPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-        {/* Left */}
-        <div>
-          <p className="text-brand-accent text-sm font-semibold tracking-widest uppercase mb-4">Contact</p>
-          <h1 className="text-4xl md:text-5xl font-display font-black text-brand-light leading-tight">
-            Get in touch
-          </h1>
-          <p className="mt-5 text-gray-400 leading-relaxed max-w-md">
-            Have a question, project proposal, or just want to say hi? Fill in the form and we&apos;ll get back to you within 1–2 business days.
-          </p>
+    <>
+      <SectionHeader
+        eyebrow="Contact"
+        title="Get In Touch"
+        subtitle="Have a question, project proposal, or just want to say hi? Fill in the form and we'll get back within 1–2 business days."
+      />
 
-          <div className="mt-10 flex flex-col gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 border-b-[3px] border-black bg-white">
+        {/* Contact info column */}
+        <div className="p-8 sm:p-10 lg:border-r-[3px] lg:border-black">
+          <p className="text-[0.7rem] font-semibold uppercase tracking-[3px] text-red mb-3">Reach Us</p>
+          <h2 className="font-editorial text-black text-[2.4rem] tracking-[2px] leading-[1]">
+            LET&apos;S TALK.
+          </h2>
+          <div className="mt-10 flex flex-col gap-6">
             {CONTACT_INFO.map(({ label, value, href }) => (
-              <div key={label}>
-                <p className="text-xs text-brand-muted uppercase tracking-wider mb-0.5">{label}</p>
+              <div key={label} className="border-b-[3px] border-black pb-4">
+                <p className="text-[0.7rem] uppercase tracking-[2px] text-red mb-1">{label}</p>
                 <a
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-brand-light hover:text-brand-accent transition-colors text-sm"
+                  className="text-[0.95rem] text-black hover:text-red transition-colors"
                 >
                   {value}
                 </a>
@@ -37,11 +40,11 @@ export default function ContactPage() {
           </div>
         </div>
 
-        {/* Right: form */}
-        <div className="rounded-2xl border border-brand-muted/20 bg-brand-mid p-8">
+        {/* Form column */}
+        <div className="p-8 sm:p-10 bg-[color:var(--color-off-white)]">
           <ContactForm />
         </div>
       </div>
-    </div>
+    </>
   )
 }

@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 import BrandToggle from './BrandToggle'
-import Button from '@/components/ui/Button'
 
 const NAV_LINKS = [
   { href: '/about',     label: 'About' },
@@ -17,70 +16,58 @@ const NAV_LINKS = [
 ]
 
 export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false)
   const [open, setOpen]         = useState(false)
   const pathname                = usePathname() ?? ''
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 50)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
 
   useEffect(() => { setOpen(false) }, [pathname])
 
   return (
     <>
-      <header
-        className={[
-          'fixed top-0 inset-x-0 z-50 transition-all duration-300',
-          scrolled
-            ? 'bg-brand-dark/90 backdrop-blur-md shadow-lg border-b border-brand-muted/20'
-            : 'bg-transparent',
-        ].join(' ')}
-      >
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-white border-b-[3px] border-black">
+        <nav className="flex items-center justify-between px-6 sm:px-10 h-16">
           {/* Logo */}
           <Link
             href="/"
-            className="font-display font-black text-xl text-brand-light hover:text-brand-accent transition-colors"
+            className="font-editorial text-2xl tracking-[3px] text-black"
           >
-            skill<span className="text-brand-accent">SYNC</span>
+            skill<span className="text-red">SYNC</span>
           </Link>
 
-          {/* Desktop nav links */}
-          <div className="hidden md:flex items-center gap-6">
-            {NAV_LINKS.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className={[
-                  'text-sm font-medium transition-colors',
-                  pathname === href || pathname.startsWith(href + '/')
-                    ? 'text-brand-accent'
-                    : 'text-brand-muted hover:text-brand-light',
-                ].join(' ')}
-              >
-                {label}
-              </Link>
-            ))}
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-8 text-[0.8rem] uppercase tracking-[0.5px] text-[color:var(--color-gray-mid)]">
+            {NAV_LINKS.map(({ href, label }) => {
+              const active = pathname === href || pathname.startsWith(href + '/')
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={
+                    active
+                      ? 'text-black font-medium transition-colors'
+                      : 'hover:text-black transition-colors'
+                  }
+                >
+                  {label}
+                </Link>
+              )
+            })}
           </div>
 
           {/* Desktop right */}
           <div className="hidden md:flex items-center gap-3">
             <BrandToggle />
-            <Link href="/login">
-              <Button variant="ghost" size="sm">Login</Button>
+            <Link href="/login" className="btn-ed-outline btn-ed-sm">
+              Login
             </Link>
-            <Link href="/join">
-              <Button variant="primary" size="sm">Join Us</Button>
+            <Link href="/join" className="btn-ed-primary btn-ed-sm">
+              Join Us
             </Link>
           </div>
 
           {/* Mobile hamburger */}
           <button
             onClick={() => setOpen(true)}
-            className="md:hidden p-2 text-brand-muted hover:text-brand-light transition-colors"
+            className="md:hidden p-2 text-black"
             aria-label="Open menu"
           >
             <Menu className="h-6 w-6" />
@@ -98,7 +85,7 @@ export default function Navbar() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm md:hidden"
+              className="fixed inset-0 z-50 bg-black/60 md:hidden"
               onClick={() => setOpen(false)}
             />
 
@@ -108,45 +95,48 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: -300 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="fixed top-0 left-0 bottom-0 z-50 w-72 bg-brand-darker border-r border-brand-muted/20 flex flex-col md:hidden"
+              className="fixed top-0 left-0 bottom-0 z-50 w-72 bg-white border-r-[3px] border-black flex flex-col md:hidden"
             >
-              <div className="flex items-center justify-between px-6 h-16 border-b border-brand-muted/15 flex-shrink-0">
-                <span className="font-display font-black text-xl text-brand-light">
-                  skill<span className="text-brand-accent">SYNC</span>
+              <div className="flex items-center justify-between px-6 h-16 border-b-[3px] border-black flex-shrink-0">
+                <span className="font-editorial text-2xl tracking-[3px] text-black">
+                  skill<span className="text-red">SYNC</span>
                 </span>
                 <button
                   onClick={() => setOpen(false)}
-                  className="p-2 text-brand-muted hover:text-brand-light transition-colors"
+                  className="p-2 text-black"
                   aria-label="Close menu"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
-              <nav className="flex flex-col gap-1 px-3 pt-4 flex-1 overflow-y-auto">
-                {NAV_LINKS.map(({ href, label }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    className={[
-                      'px-4 py-3 rounded-lg text-sm font-medium transition-colors',
-                      pathname === href
-                        ? 'bg-brand-accent/10 text-brand-accent'
-                        : 'text-brand-muted hover:text-brand-light hover:bg-brand-mid/50',
-                    ].join(' ')}
-                  >
-                    {label}
-                  </Link>
-                ))}
+              <nav className="flex flex-col flex-1 overflow-y-auto">
+                {NAV_LINKS.map(({ href, label }) => {
+                  const active = pathname === href
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={[
+                        'px-6 py-4 text-sm uppercase tracking-wider border-b border-black/10 transition-colors',
+                        active
+                          ? 'bg-red text-white'
+                          : 'text-black hover:bg-[color:var(--color-off-white)]',
+                      ].join(' ')}
+                    >
+                      {label}
+                    </Link>
+                  )
+                })}
               </nav>
 
-              <div className="px-6 py-6 border-t border-brand-muted/15 flex flex-col gap-3 flex-shrink-0">
+              <div className="px-6 py-6 border-t-[3px] border-black flex flex-col gap-3 flex-shrink-0">
                 <BrandToggle />
-                <Link href="/login" className="block">
-                  <Button variant="ghost" size="sm" className="w-full">Login</Button>
+                <Link href="/login" className="btn-ed-outline btn-ed-sm w-full">
+                  Login
                 </Link>
-                <Link href="/join" className="block">
-                  <Button variant="primary" size="sm" className="w-full">Join Us</Button>
+                <Link href="/join" className="btn-ed-primary btn-ed-sm w-full">
+                  Join Us
                 </Link>
               </div>
             </motion.div>

@@ -10,7 +10,7 @@ import {
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Project } from '@/lib/types/app.types'
 
-// ── Feature icon keyword mapping ────────────────────────────────────────────
+// Feature icon keyword mapping — unchanged.
 function getFeatureIcon(title: string): LucideIcon {
   const t = title.toLowerCase()
   if (t.includes('ai') || t.includes('gpt') || t.includes('bot') || t.includes('llm')) return Bot
@@ -33,18 +33,13 @@ function getFeatureIcon(title: string): LucideIcon {
   return CheckCircle2
 }
 
-const TOOL_BADGE: Record<string, string> = {
-  'Make.com': 'bg-violet-500/15 text-violet-300 border-violet-500/30',
-  'n8n':      'bg-orange-500/15 text-orange-300 border-orange-500/30',
-}
-
 interface Props { params: { slug: string } }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const admin = createAdminClient()
   const { data } = await admin
     .from('projects')
-    .select('title, tagline, short_description, cover_image')
+    .select('title, tagline, cover_image')
     .eq('slug', params.slug)
     .single()
   if (!data) return { title: 'Project Not Found' }
@@ -57,271 +52,235 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
+// Editorial-bold project case-study page.
+// Kept the section content model identical — only visuals were re-skinned.
+
 export default async function ProjectDetailPage({ params }: Props) {
   const admin = createAdminClient()
   const { data: project } = await admin
-    .from('projects')
-    .select('*')
-    .eq('slug', params.slug)
-    .eq('is_published', true)
-    .single()
-
+    .from('projects').select('*').eq('slug', params.slug).eq('is_published', true).single()
   if (!project) notFound()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const p           = project as unknown as Project
   const howItWorks  = (p.how_it_works  as { title: string; description: string }[] | null) ?? []
   const keyFeatures = (p.key_features  as { title: string; description: string }[] | null) ?? []
   const results     = (p.results       as string[]                                | null) ?? []
   const techStack   = (p.tech_stack    as { tool: string;  role: string }[]      | null) ?? []
-  const toolClass   = p.tool ? (TOOL_BADGE[p.tool] ?? 'bg-brand-accent/10 text-brand-accent border-brand-accent/30') : ''
 
   return (
     <>
-      {/* ══════════════════════════════════════════════════════
-          HERO
-      ══════════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden bg-brand-darker border-b border-brand-muted/10">
-        {/* Decorative radial glow */}
-        <div className="pointer-events-none absolute -top-60 -right-60 w-[700px] h-[700px] rounded-full bg-[#E94560]/6 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-40 -left-40 w-[400px] h-[400px] rounded-full bg-[#E94560]/4 blur-3xl" />
+      {/* ── Breadcrumb strip ────────────────────────────────────── */}
+      <div className="border-b-[3px] border-black bg-white px-6 sm:px-10 py-3">
+        <Link href="/projects" className="inline-flex items-center gap-1.5 text-[0.72rem] uppercase tracking-[1px] text-black hover:text-red">
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Back to projects
+        </Link>
+      </div>
 
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-16 md:pb-20">
-          {/* Back link */}
-          <Link
-            href="/projects"
-            className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-200 transition-colors mb-10"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to projects
-          </Link>
-
-          {/* Badges */}
-          <div className="flex flex-wrap items-center gap-2 mb-6">
-            {p.tool && (
-              <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${toolClass}`}>
-                Built with {p.tool}
-              </span>
-            )}
-            {p.industry && (
-              <span className="text-xs font-semibold px-3 py-1 rounded-full border border-brand-muted/25 bg-brand-mid/60 text-zinc-400">
-                {p.industry.split(',')[0].trim()}
-              </span>
-            )}
-            {p.project_type && (
-              <span className="text-xs font-semibold px-3 py-1 rounded-full border border-[#E94560]/30 bg-[#E94560]/8 text-[#E94560]">
-                {p.project_type}
-              </span>
-            )}
-          </div>
-
-          {/* Title */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-black text-brand-light leading-[1.08] tracking-tight">
-            {p.title}
-          </h1>
-
-          {/* Tagline */}
-          {p.tagline && (
-            <p className="mt-5 text-lg sm:text-xl text-zinc-400 leading-relaxed max-w-2xl">
-              {p.tagline}
-            </p>
+      {/* ── Hero ───────────────────────────────────────────────── */}
+      <div className="border-b-[3px] border-black bg-white px-6 sm:px-10 py-12">
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+          {p.tool && (
+            <span className="text-[0.62rem] font-semibold uppercase tracking-[2px] px-2 py-1 bg-black text-white">
+              Built with {p.tool}
+            </span>
           )}
-
-          {/* Builder credit */}
-          {p.builder_name && (
-            <div className="mt-8 flex items-center gap-3 px-4 py-2.5 rounded-2xl border border-brand-muted/20 bg-brand-mid/50 w-fit max-w-full">
-              <div className="w-8 h-8 rounded-full bg-[#E94560]/15 border border-[#E94560]/30 flex items-center justify-center text-sm font-bold text-[#E94560] flex-shrink-0 select-none">
-                {p.builder_name[0]}
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm text-zinc-400 truncate">
-                  Built by{' '}
-                  <span className="font-semibold text-zinc-200">{p.builder_name}</span>
-                </p>
-                {p.builder_role && (
-                  <p className="text-xs text-zinc-500 truncate">{p.builder_role}</p>
-                )}
-              </div>
-            </div>
+          {p.industry && (
+            <span className="text-[0.62rem] font-semibold uppercase tracking-[2px] px-2 py-1 border border-black text-black">
+              {p.industry.split(',')[0].trim()}
+            </span>
+          )}
+          {p.project_type && (
+            <span className="text-[0.62rem] font-semibold uppercase tracking-[2px] px-2 py-1 bg-red text-white">
+              {p.project_type}
+            </span>
           )}
         </div>
-      </section>
 
-      {/* ══════════════════════════════════════════════════════
-          THE PROBLEM
-      ══════════════════════════════════════════════════════ */}
-      {p.problem_statement && (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14 border-b border-brand-muted/10">
-          <p className="text-xs font-semibold text-[#E94560] uppercase tracking-[0.2em] mb-5">
-            The Problem
+        <h1 className="font-editorial text-black text-[3rem] sm:text-[5rem] leading-[0.9] tracking-[2px]">
+          {p.title.toUpperCase()}
+        </h1>
+        {p.tagline && (
+          <p className="mt-6 text-[1.05rem] text-[color:var(--color-gray-dark)] leading-[1.7] max-w-3xl">
+            {p.tagline}
           </p>
-          <div className="relative rounded-xl border border-red-500/20 bg-red-500/[0.04] overflow-hidden">
-            <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#E94560] via-[#E94560]/70 to-[#E94560]/20 rounded-l-xl" />
-            <p className="pl-7 pr-6 py-6 text-base sm:text-lg text-zinc-300 leading-relaxed">
+        )}
+
+        {p.builder_name && (
+          <div className="mt-8 inline-flex items-center gap-4 border-[3px] border-black bg-white px-4 py-3">
+            <div className="w-10 h-10 bg-red flex items-center justify-center flex-shrink-0">
+              <span className="font-editorial text-white text-lg">{p.builder_name[0]}</span>
+            </div>
+            <div>
+              <p className="text-[0.85rem] text-[color:var(--color-gray-dark)]">
+                Built by <span className="font-semibold text-black">{p.builder_name}</span>
+              </p>
+              {p.builder_role && (
+                <p className="text-[0.7rem] uppercase tracking-[1px] text-[color:var(--color-gray-mid)]">
+                  {p.builder_role}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── The Problem ────────────────────────────────────────── */}
+      {p.problem_statement && (
+        <section className="border-b-[3px] border-black bg-white">
+          <div className="px-6 sm:px-10 py-4 border-b-[3px] border-black bg-red">
+            <p className="font-editorial text-white text-[1.5rem] tracking-[2px]">THE PROBLEM</p>
+          </div>
+          <div className="px-6 sm:px-10 py-10">
+            <p className="text-[1rem] sm:text-[1.1rem] text-black leading-[1.75] max-w-3xl">
               {p.problem_statement}
             </p>
-          </div>
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════════
-          HOW IT WORKS — vertical timeline
-      ══════════════════════════════════════════════════════ */}
-      {howItWorks.length > 0 && (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14 border-b border-brand-muted/10">
-          <p className="text-xs font-semibold text-[#E94560] uppercase tracking-[0.2em] mb-10">
-            How It Works
-          </p>
-          <div>
-            {howItWorks.map((step, i) => (
-              <div key={i} className="flex gap-5">
-                {/* Circle + connecting line */}
-                <div className="flex flex-col items-center flex-shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-[#E94560]/10 border-2 border-[#E94560]/40 flex items-center justify-center text-sm font-bold text-[#E94560]">
-                    {i + 1}
-                  </div>
-                  {i < howItWorks.length - 1 && (
-                    <div className="w-px flex-1 bg-gradient-to-b from-[#E94560]/35 to-transparent min-h-8 my-1.5" />
-                  )}
-                </div>
-                {/* Content */}
-                <div className={`pt-2 min-w-0 flex-1 ${i < howItWorks.length - 1 ? 'pb-8' : 'pb-0'}`}>
-                  <h3 className="font-semibold text-zinc-100 mb-1.5">{step.title}</h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed">{step.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════════
-          KEY FEATURES — icon grid
-      ══════════════════════════════════════════════════════ */}
-      {keyFeatures.length > 0 && (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14 border-b border-brand-muted/10">
-          <p className="text-xs font-semibold text-[#E94560] uppercase tracking-[0.2em] mb-8">
-            Key Features
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {keyFeatures.map((feat, i) => {
-              const Icon = getFeatureIcon(feat.title)
-              return (
-                <div
-                  key={i}
-                  className="group rounded-xl border border-brand-muted/20 bg-brand-mid/50 p-5 hover:border-[#E94560]/30 hover:bg-[#E94560]/[0.04] transition-all duration-200"
-                >
-                  <div className="w-9 h-9 rounded-lg bg-[#E94560]/10 border border-[#E94560]/20 flex items-center justify-center mb-3.5 group-hover:bg-[#E94560]/15 transition-colors">
-                    <Icon className="w-4 h-4 text-[#E94560]" />
-                  </div>
-                  <h3 className="font-semibold text-zinc-100 mb-1.5 leading-snug">{feat.title}</h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed">{feat.description}</p>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════════
-          RESULTS & IMPACT — full-width accent section
-      ══════════════════════════════════════════════════════ */}
-      {results.length > 0 && (
-        <section className="bg-brand-darker/60 border-y border-brand-muted/10 py-14">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <p className="text-xs font-semibold text-[#E94560] uppercase tracking-[0.2em] mb-8">
-              Results & Impact
-            </p>
-            <ul className="space-y-4">
-              {results.map((result, i) => (
-                <li key={i} className="flex items-start gap-4">
-                  <div className="flex-shrink-0 mt-0.5 w-6 h-6 rounded-full bg-green-500/15 border border-green-500/30 flex items-center justify-center">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />
-                  </div>
-                  <span className="text-base text-zinc-300 leading-relaxed">{result}</span>
-                </li>
-              ))}
-            </ul>
           </div>
         </section>
       )}
 
-      {/* ══════════════════════════════════════════════════════
-          TIME & MONEY SAVED
-      ══════════════════════════════════════════════════════ */}
+      {/* ── How It Works ───────────────────────────────────────── */}
+      {howItWorks.length > 0 && (
+        <section className="border-b-[3px] border-black bg-white">
+          <div className="px-6 sm:px-10 py-4 border-b-[3px] border-black">
+            <p className="font-editorial text-black text-[1.5rem] tracking-[2px]">HOW IT WORKS</p>
+          </div>
+          <div className="px-6 sm:px-10 py-10 max-w-3xl">
+            {howItWorks.map((step, i) => (
+              <div key={i} className="flex gap-5">
+                <div className="flex flex-col items-center flex-shrink-0">
+                  <div className="w-10 h-10 border-[3px] border-black bg-red flex items-center justify-center font-editorial text-white text-lg">
+                    {i + 1}
+                  </div>
+                  {i < howItWorks.length - 1 && (
+                    <div className="w-[3px] flex-1 bg-black min-h-8 my-1" />
+                  )}
+                </div>
+                <div className={`pt-2 min-w-0 flex-1 ${i < howItWorks.length - 1 ? 'pb-8' : ''}`}>
+                  <h3 className="font-editorial text-black text-[1.4rem] tracking-[1px]">{step.title}</h3>
+                  <p className="text-[0.9rem] text-[color:var(--color-gray-dark)] leading-[1.7] mt-2">
+                    {step.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Key Features ───────────────────────────────────────── */}
+      {keyFeatures.length > 0 && (
+        <section className="border-b-[3px] border-black bg-white">
+          <div className="px-6 sm:px-10 py-4 border-b-[3px] border-black">
+            <p className="font-editorial text-black text-[1.5rem] tracking-[2px]">KEY FEATURES</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2">
+            {keyFeatures.map((feat, i) => {
+              const Icon = getFeatureIcon(feat.title)
+              const evenRow = Math.floor(i / 2) % 2 === 0
+              return (
+                <div
+                  key={i}
+                  className={[
+                    'p-6 border-b-[3px] border-black',
+                    i % 2 === 0 ? 'sm:border-r-[3px] sm:border-black' : '',
+                    evenRow ? '' : '',
+                  ].join(' ')}
+                >
+                  <div className="w-11 h-11 border-[3px] border-black bg-white flex items-center justify-center mb-4">
+                    <Icon className="w-5 h-5 text-red" />
+                  </div>
+                  <h3 className="font-editorial text-black text-[1.3rem] tracking-[1px]">{feat.title}</h3>
+                  <p className="text-[0.85rem] text-[color:var(--color-gray-dark)] leading-[1.7] mt-2">{feat.description}</p>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ── Results & Impact ───────────────────────────────────── */}
+      {results.length > 0 && (
+        <section className="border-b-[3px] border-black bg-black text-white">
+          <div className="px-6 sm:px-10 py-4 border-b-[3px] border-red">
+            <p className="font-editorial text-white text-[1.5rem] tracking-[2px]">RESULTS &amp; IMPACT</p>
+          </div>
+          <ul className="px-6 sm:px-10 py-10 space-y-4 max-w-3xl">
+            {results.map((r, i) => (
+              <li key={i} className="flex items-start gap-4">
+                <span className="text-red flex-shrink-0 mt-1"><CheckCircle2 className="w-5 h-5" /></span>
+                <span className="text-[0.95rem] text-white leading-[1.7]">{r}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* ── Time & Money Saved ─────────────────────────────────── */}
       {(p.time_saved || p.money_saved) && (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14 border-b border-brand-muted/10">
-          <p className="text-xs font-semibold text-[#E94560] uppercase tracking-[0.2em] mb-8">
-            Time & Money Saved
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <section className="border-b-[3px] border-black bg-white">
+          <div className="px-6 sm:px-10 py-4 border-b-[3px] border-black">
+            <p className="font-editorial text-black text-[1.5rem] tracking-[2px]">TIME &amp; MONEY SAVED</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2">
             {p.time_saved && (
-              <div className="rounded-xl border border-brand-muted/20 bg-brand-mid/50 p-6 flex gap-4 items-start">
-                <div className="w-11 h-11 rounded-xl bg-[#E94560]/10 border border-[#E94560]/20 flex items-center justify-center flex-shrink-0">
-                  <Clock className="w-5 h-5 text-[#E94560]" />
+              <div className="p-8 sm:border-r-[3px] sm:border-black border-b-[3px] sm:border-b-0 border-black flex gap-4 items-start">
+                <div className="w-12 h-12 border-[3px] border-black bg-red flex items-center justify-center flex-shrink-0">
+                  <Clock className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">Time Saved</p>
-                  <p className="text-xl font-display font-bold text-brand-light leading-snug">{p.time_saved}</p>
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-[2px] text-red mb-1">Time Saved</p>
+                  <p className="font-editorial text-black text-[2rem] leading-none tracking-[1px]">{p.time_saved}</p>
                 </div>
               </div>
             )}
             {p.money_saved && (
-              <div className="rounded-xl border border-brand-muted/20 bg-brand-mid/50 p-6 flex gap-4 items-start">
-                <div className="w-11 h-11 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center flex-shrink-0">
-                  <DollarSign className="w-5 h-5 text-green-400" />
+              <div className="p-8 flex gap-4 items-start">
+                <div className="w-12 h-12 border-[3px] border-black bg-black flex items-center justify-center flex-shrink-0">
+                  <DollarSign className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">Value Generated</p>
-                  <p className="text-xl font-display font-bold text-brand-light leading-snug">{p.money_saved}</p>
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-[2px] text-red mb-1">Value Generated</p>
+                  <p className="font-editorial text-black text-[2rem] leading-none tracking-[1px]">{p.money_saved}</p>
                 </div>
               </div>
             )}
           </div>
-        </div>
+        </section>
       )}
 
-      {/* ══════════════════════════════════════════════════════
-          TECH STACK — pill tags
-      ══════════════════════════════════════════════════════ */}
+      {/* ── Tech Stack ─────────────────────────────────────────── */}
       {techStack.length > 0 && (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14 border-b border-brand-muted/10">
-          <p className="text-xs font-semibold text-[#E94560] uppercase tracking-[0.2em] mb-8">
-            Tech Stack
-          </p>
-          <div className="flex flex-wrap gap-3">
+        <section className="border-b-[3px] border-black bg-white">
+          <div className="px-6 sm:px-10 py-4 border-b-[3px] border-black">
+            <p className="font-editorial text-black text-[1.5rem] tracking-[2px]">TECH STACK</p>
+          </div>
+          <div className="p-6 sm:p-10 flex flex-wrap gap-3">
             {techStack.map((item, i) => (
-              <div
-                key={i}
-                className="rounded-xl border border-brand-muted/20 bg-brand-mid/50 px-4 py-3 hover:border-[#E94560]/25 transition-colors"
-              >
-                <p className="text-sm font-semibold text-zinc-200">{item.tool}</p>
-                <p className="text-xs text-zinc-500 mt-0.5">{item.role}</p>
+              <div key={i} className="border-[3px] border-black bg-white px-4 py-2">
+                <p className="text-[0.85rem] font-semibold text-black">{item.tool}</p>
+                <p className="text-[0.7rem] uppercase tracking-[1px] text-[color:var(--color-gray-mid)] mt-0.5">
+                  {item.role}
+                </p>
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
-      {/* ══════════════════════════════════════════════════════
-          CTA
-      ══════════════════════════════════════════════════════ */}
-      <section className="border-t border-[#E94560]/15 bg-gradient-to-b from-[#E94560]/[0.06] to-transparent py-20">
-        <div className="max-w-2xl mx-auto px-4 text-center">
-          <p className="text-xs font-semibold text-[#E94560] uppercase tracking-[0.2em] mb-4">skillIT</p>
-          <h2 className="text-3xl sm:text-4xl font-display font-black text-brand-light mb-4 leading-tight">
-            Want this built for your business?
-          </h2>
-          <p className="text-zinc-400 mb-8 leading-relaxed max-w-lg mx-auto">
-            We build custom automation systems for companies across Pakistan and beyond. Tell us what&apos;s costing you time — we&apos;ll build the system that fixes it.
-          </p>
-          <Link
-            href="/contact"
-            className="inline-block px-8 py-3.5 rounded-lg bg-[#E94560] text-white font-semibold text-sm hover:bg-[#E94560]/90 transition-colors"
-          >
-            Get in Touch →
-          </Link>
-        </div>
+      {/* ── CTA ────────────────────────────────────────────────── */}
+      <section className="p-8 sm:p-16 border-b-[3px] border-black bg-red text-white text-center">
+        <p className="text-[0.72rem] font-semibold uppercase tracking-[3px] text-white/80 mb-4">skillIT</p>
+        <h2 className="font-editorial text-white text-[3rem] sm:text-[4.5rem] leading-[0.95] tracking-[2px]">
+          WANT THIS FOR YOUR BUSINESS?
+        </h2>
+        <p className="mt-4 text-white/85 max-w-xl mx-auto leading-relaxed">
+          We build custom automation systems for companies across Pakistan and beyond. Tell us what&apos;s
+          costing you time — we&apos;ll build the system that fixes it.
+        </p>
+        <Link href="/contact" className="btn-ed-red mt-8 inline-flex" style={{ background: '#080808', color: '#fff' }}>
+          Get in Touch →
+        </Link>
       </section>
     </>
   )

@@ -4,7 +4,11 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import type { Event } from '@/lib/types/app.types'
 import { formatDate } from '@/lib/utils/formatDate'
-import Badge from '@/components/ui/Badge'
+
+// Editorial-bold workshop card.
+// - 3px black border, no border-radius, no drop shadow.
+// - Red top strip carries the type + price in Bebas Neue.
+// - Hover: shifts to off-white background; red left accent border animates in.
 
 interface WorkshopCardProps {
   event: Event
@@ -13,58 +17,47 @@ interface WorkshopCardProps {
 export default function WorkshopCard({ event }: WorkshopCardProps) {
   const isUpcoming = event.date ? new Date(event.date) > new Date() : false
   const seatsLeft  = event.seats != null ? event.seats - event.seats_taken : null
-  const fillPct    =
-    event.seats && event.seats > 0
-      ? Math.min((event.seats_taken / event.seats) * 100, 100)
-      : null
+
+  const priceLabel = event.is_paid ? `Rs ${event.price}` : 'FREE'
+  const statusLabel = isUpcoming ? 'UPCOMING' : 'PAST'
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-30px' }}
-      transition={{ duration: 0.45, ease: 'easeOut' }}
-      className="group flex flex-col rounded-xl border border-brand-muted/20 bg-brand-mid overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-glow hover:border-brand-accent/50"
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+      whileHover={{ y: -2 }}
+      className="group flex flex-col border-[3px] border-black bg-white transition-colors duration-200 hover:bg-[color:var(--color-off-white)]"
     >
-      {/* Colour bar */}
-      <div className="h-1 bg-gradient-to-r from-brand-accent to-brand-accent/40" />
+      {/* Top red strip */}
+      <div className="bg-red text-white flex items-center justify-between px-4 py-2 border-b-[3px] border-black">
+        <span className="font-editorial text-lg tracking-[2px]">
+          {priceLabel}
+        </span>
+        <span className="text-[0.68rem] font-semibold uppercase tracking-[2px]">
+          {statusLabel}
+        </span>
+      </div>
 
-      <div className="flex flex-col flex-1 p-5 gap-3">
-        {/* Meta row */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <Badge variant="info" dot>
-            {event.brand === 'skillit' ? 'skillIT' : 'skillSYNC'}
-          </Badge>
+      <div className="flex flex-col flex-1 p-5 sm:p-6 gap-3 relative">
+        {/* Left accent that appears on hover */}
+        <span className="absolute left-0 top-0 bottom-0 w-0 group-hover:w-[6px] bg-red transition-all duration-200" />
 
-          {isUpcoming && (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-400 px-2 py-0.5 rounded-full bg-green-400/10 border border-green-400/20">
-              <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
-              Upcoming
-            </span>
-          )}
-
-          {!isUpcoming && event.date && (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold text-brand-muted px-2 py-0.5 rounded-full bg-brand-muted/10 border border-brand-muted/20">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-muted" />
-              Completed
-            </span>
-          )}
-
-          {event.is_paid ? (
-            <Badge variant="warning">Paid · Rs {event.price}</Badge>
-          ) : (
-            <Badge variant="success">Free</Badge>
-          )}
-        </div>
+        {/* Brand tag */}
+        <span className="text-[0.68rem] font-semibold uppercase tracking-[2px] text-[color:var(--color-gray-mid)]">
+          {event.brand === 'skillit' ? 'skillIT' : 'skillSYNC'}
+          {event.date && ` · ${formatDate(event.date)}`}
+        </span>
 
         {/* Title */}
-        <h3 className="text-lg font-display font-semibold text-brand-light leading-snug group-hover:text-brand-accent transition-colors duration-200 line-clamp-2">
+        <h3 className="font-editorial text-black text-[1.8rem] leading-[1] tracking-[1px] line-clamp-2">
           {event.title}
         </h3>
 
         {/* Description */}
         {event.description && (
-          <p className="text-sm text-gray-400 leading-relaxed line-clamp-3 flex-1">
+          <p className="text-[0.82rem] text-[color:var(--color-gray-dark)] leading-[1.7] line-clamp-3 flex-1">
             {event.description}
           </p>
         )}
@@ -75,7 +68,7 @@ export default function WorkshopCard({ event }: WorkshopCardProps) {
             {event.tools_covered.slice(0, 4).map((tool) => (
               <span
                 key={tool}
-                className="text-xs px-2 py-0.5 rounded-full bg-brand-dark/60 text-brand-muted border border-brand-muted/20"
+                className="text-[0.68rem] px-2 py-0.5 border border-black text-black uppercase tracking-[1px]"
               >
                 {tool}
               </span>
@@ -83,61 +76,43 @@ export default function WorkshopCard({ event }: WorkshopCardProps) {
           </div>
         )}
 
-        {/* Past workshop attendee count */}
-        {!isUpcoming && event.seats_taken > 0 && !event.hide_seats_display && (
-          <div className="flex items-center gap-2 text-xs text-brand-muted">
-            <span className="flex items-center gap-1">
-              <span className="text-brand-accent font-semibold text-sm">{event.seats_taken}</span>
-              {' '}people attended
-            </span>
+        {/* Stats row (past = attendees, upcoming = seats) */}
+        {!event.hide_seats_display && (
+          <div className="text-[0.78rem] text-[color:var(--color-gray-dark)]">
+            {!isUpcoming && event.seats_taken > 0 && (
+              <span>
+                <span className="text-red font-semibold">{event.seats_taken}</span> people attended
+              </span>
+            )}
+            {isUpcoming && seatsLeft !== null && (
+              <span>
+                <span className="text-red font-semibold">{seatsLeft}</span> seats left
+              </span>
+            )}
           </div>
         )}
 
-        {/* Seats progress bar — shown for upcoming or limited-seat events */}
-        {fillPct !== null && isUpcoming && !event.hide_seats_display && (
-          <div className="flex flex-col gap-1.5">
-            <div className="flex justify-between text-xs text-brand-muted">
-              {event.seats_taken > 0 && <span>{event.seats_taken} registered</span>}
-              {seatsLeft !== null && <span className="ml-auto">{seatsLeft} seats left</span>}
-            </div>
-            <div className="h-1.5 rounded-full bg-brand-muted/20 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-brand-accent transition-all duration-700"
-                style={{ width: `${fillPct}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Footer */}
-        <div className="flex items-center justify-between mt-auto pt-3 border-t border-brand-muted/15 gap-3 flex-wrap">
-          {event.date && (
-            <span className="text-xs text-brand-muted">{formatDate(event.date)}</span>
-          )}
-
-          {/* Upcoming paid workshop — prominent CTA */}
+        {/* CTA */}
+        <div className="mt-auto pt-4 border-t-[3px] border-black flex items-center justify-between gap-3">
           {isUpcoming && event.is_paid ? (
             event.external_registration_url ? (
               <a
                 href={event.external_registration_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-brand-accent hover:bg-[#c73652] px-3 py-1.5 rounded-lg transition-colors duration-200 ml-auto flex-shrink-0"
+                className="btn-ed-primary btn-ed-sm"
               >
-                Register Now — Rs {event.price}
+                Register — Rs {event.price}
               </a>
             ) : (
-              <Link
-                href="/workshops/register"
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-brand-accent hover:bg-[#c73652] px-3 py-1.5 rounded-lg transition-colors duration-200 ml-auto flex-shrink-0"
-              >
-                Register Now — Rs {event.price}
+              <Link href="/workshops/register" className="btn-ed-primary btn-ed-sm">
+                Register — Rs {event.price}
               </Link>
             )
           ) : (
             <Link
               href={`/workshops/${event.slug}`}
-              className="text-xs font-semibold text-brand-accent hover:underline transition-colors ml-auto"
+              className="text-[0.78rem] font-semibold uppercase tracking-[1px] text-black hover:text-red transition-colors"
             >
               View details →
             </Link>

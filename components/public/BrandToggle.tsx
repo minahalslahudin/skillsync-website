@@ -1,32 +1,38 @@
 'use client'
 
 import { useBrand } from '@/lib/context/BrandContext'
-import { cn } from '@/lib/utils/cn'
 
+// Editorial-bold: two small square uppercase buttons side by side.
+// Active state = black background + white text (no border-radius, no gradient).
 export default function BrandToggle() {
   const { brand, setBrand } = useBrand()
 
+  const base =
+    'px-3 py-1.5 text-[0.7rem] uppercase tracking-[1px] font-semibold border-y-[3px] border-black transition-colors'
+
   return (
-    <div className="flex items-center rounded-full border border-brand-muted/30 bg-brand-mid/50 p-0.5 gap-0.5">
+    <div className="inline-flex">
       <button
         onClick={() => setBrand('skillsync')}
-        className={cn(
-          'px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 whitespace-nowrap',
+        className={[
+          base,
+          'border-l-[3px]',
           brand === 'skillsync'
-            ? 'bg-brand-accent text-white shadow-sm'
-            : 'text-brand-muted hover:text-brand-light'
-        )}
+            ? 'bg-black text-white'
+            : 'bg-white text-black hover:bg-[color:var(--color-off-white)]',
+        ].join(' ')}
       >
         skillSYNC
       </button>
       <button
         onClick={() => setBrand('skillit')}
-        className={cn(
-          'px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 whitespace-nowrap',
+        className={[
+          base,
+          'border-x-[3px]',
           brand === 'skillit'
-            ? 'bg-skillit-accent text-white shadow-sm'
-            : 'text-brand-muted hover:text-brand-light'
-        )}
+            ? 'bg-black text-white'
+            : 'bg-white text-black hover:bg-[color:var(--color-off-white)]',
+        ].join(' ')}
       >
         skillIT
       </button>

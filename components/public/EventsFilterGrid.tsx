@@ -14,13 +14,11 @@ const FILTERS: { label: string; value: FilterValue }[] = [
   { label: 'Cohorts',   value: 'cohort' },
 ]
 
-interface EventsFilterGridProps {
-  events: Event[]
-}
+interface EventsFilterGridProps { events: Event[] }
 
 export default function EventsFilterGrid({ events }: EventsFilterGridProps) {
-  const router      = useRouter()
-  const pathname    = usePathname()
+  const router       = useRouter()
+  const pathname     = usePathname()
   const searchParams = useSearchParams()
   const filter = (searchParams.get('filter') ?? 'all') as FilterValue
 
@@ -38,17 +36,18 @@ export default function EventsFilterGrid({ events }: EventsFilterGridProps) {
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Filter bar */}
-      <div className="flex gap-2 flex-wrap">
-        {FILTERS.map(({ label, value }) => (
+      <div className="inline-flex flex-wrap">
+        {FILTERS.map(({ label, value }, i) => (
           <button
             key={value}
             onClick={() => setFilter(value)}
-            className={`text-sm px-4 py-1.5 rounded-full border transition-colors duration-200 ${
+            className={[
+              'px-4 py-2 text-[0.78rem] uppercase tracking-[1px] font-semibold border-[3px] border-black transition-colors',
+              i > 0 ? 'border-l-0' : '',
               filter === value
-                ? 'bg-brand-accent text-white border-brand-accent'
-                : 'border-brand-muted/30 text-brand-muted hover:border-brand-accent/50 hover:text-brand-light'
-            }`}
+                ? 'bg-black text-white'
+                : 'bg-white text-black hover:bg-[color:var(--color-off-white)]',
+            ].join(' ')}
           >
             {label}
           </button>
@@ -56,7 +55,9 @@ export default function EventsFilterGrid({ events }: EventsFilterGridProps) {
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-center py-20 text-brand-muted">No events match this filter.</p>
+        <p className="text-center py-20 text-[color:var(--color-gray-mid)] uppercase tracking-[2px] text-sm">
+          No events match this filter.
+        </p>
       ) : (
         <div className="flex flex-col gap-4">
           {filtered.map((e) => <EventCard key={e.id} event={e} />)}

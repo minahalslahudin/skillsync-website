@@ -4,24 +4,24 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 
+// Editorial-bold stats: 4 columns separated by 3px black borders.
+// Big red Bebas Neue numbers, tiny uppercase Inter labels.
+
 interface StatConfig {
   key: string
   suffix: string
   label: string
+  desc: string
 }
 
 const STAT_CONFIG: StatConfig[] = [
-  { key: 'workshops',  suffix: '+', label: 'Workshops Delivered' },
-  { key: 'projects',   suffix: '+', label: 'Projects Completed' },
-  { key: 'reviews',    suffix: '+', label: 'Community Reviews' },
-  { key: 'volunteers', suffix: '+', label: 'Volunteers' },
+  { key: 'volunteers', suffix: '+', label: 'Members',       desc: 'Students and grads actively building in the community' },
+  { key: 'workshops',  suffix: '',  label: 'Workshops',     desc: 'Paid, intensive, hands-on sessions run so far' },
+  { key: 'projects',   suffix: '',  label: 'Projects',      desc: 'Real automation systems delivered to clients' },
+  { key: 'reviews',    suffix: '+', label: 'Reviews',       desc: 'Verified feedback from our community' },
 ]
 
-function AnimatedNumber({
-  value,
-  suffix,
-  loading,
-}: {
+function AnimatedNumber({ value, suffix, loading }: {
   value: number
   suffix: string
   loading: boolean
@@ -44,25 +44,9 @@ function AnimatedNumber({
   }, [inView, value, loading])
 
   if (loading) {
-    return (
-      <span
-        ref={ref}
-        className="inline-block w-16 h-10 rounded-lg bg-brand-muted/20 animate-pulse align-middle"
-      />
-    )
+    return <span ref={ref} className="inline-block w-16 h-10 bg-black/10 animate-pulse align-middle" />
   }
-
-  return (
-    <span ref={ref}>
-      {count}
-      {suffix}
-    </span>
-  )
-}
-
-const fadeUp = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
+  return <span ref={ref}>{count}{suffix}</span>
 }
 
 export default function StatCounter() {
@@ -73,19 +57,9 @@ export default function StatCounter() {
     async function fetchStats() {
       const supabase = createClient()
       const [workshops, projects, reviews, users] = await Promise.all([
-        supabase
-          .from('events')
-          .select('*', { count: 'exact', head: true })
-          .eq('type', 'workshop')
-          .eq('is_published', true),
-        supabase
-          .from('projects')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_published', true),
-        supabase
-          .from('reviews')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_approved', true),
+        supabase.from('events').select('*', { count: 'exact', head: true }).eq('type', 'workshop').eq('is_published', true),
+        supabase.from('projects').select('*', { count: 'exact', head: true }).eq('is_published', true),
+        supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('is_approved', true),
         supabase.from('users').select('*', { count: 'exact', head: true }),
       ])
       setStats({
@@ -100,34 +74,32 @@ export default function StatCounter() {
   }, [])
 
   return (
-    <section className="py-16 bg-brand-darker border-y border-brand-muted/10">
-      <div className="max-w-5xl mx-auto px-4">
+    <section className="grid grid-cols-2 lg:grid-cols-4 border-b-[3px] border-black bg-white">
+      {STAT_CONFIG.map((stat, i) => (
         <motion.div
-          initial="initial"
-          whileInView="animate"
+          key={stat.key}
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ staggerChildren: 0.12 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-8"
+          transition={{ duration: 0.4, delay: i * 0.08 }}
+          className={[
+            'p-6 sm:p-8 relative',
+            i < STAT_CONFIG.length - 1 ? 'lg:border-r-[3px] lg:border-black' : '',
+            i % 2 === 0 ? 'border-r-[3px] border-black lg:border-r-[3px]' : '',
+            i < 2 ? 'border-b-[3px] border-black lg:border-b-0' : '',
+          ].join(' ')}
         >
-          {STAT_CONFIG.map((stat) => (
-            <motion.div
-              key={stat.key}
-              variants={fadeUp}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
-              className="text-center"
-            >
-              <p className="text-4xl md:text-5xl font-display font-black text-brand-accent mb-1">
-                <AnimatedNumber
-                  value={stats[stat.key] ?? 0}
-                  suffix={stat.suffix}
-                  loading={loading}
-                />
-              </p>
-              <p className="text-sm text-brand-muted font-medium">{stat.label}</p>
-            </motion.div>
-          ))}
+          <div className="font-editorial text-red text-[3rem] leading-none">
+            <AnimatedNumber value={stats[stat.key] ?? 0} suffix={stat.suffix} loading={loading} />
+          </div>
+          <div className="text-[0.78rem] font-semibold uppercase tracking-[1px] text-black mt-1">
+            {stat.label}
+          </div>
+          <p className="text-[0.78rem] text-[color:var(--color-gray-mid)] leading-[1.6] mt-2">
+            {stat.desc}
+          </p>
         </motion.div>
-      </div>
+      ))}
     </section>
   )
 }

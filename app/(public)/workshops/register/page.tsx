@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import WorkshopRegistrationForm from '@/components/forms/WorkshopRegistrationForm'
+import SectionHeader from '@/components/public/SectionHeader'
 
 export const metadata: Metadata = {
   title: 'Register — n8n Launchpad | skillSYNC',
@@ -15,82 +16,70 @@ const DETAILS = [
   { label: 'Format',   value: 'Live Online' },
 ]
 
+const PERKS = [
+  'Certificate for all attendees',
+  'Competency Letter for anyone who completes the special home challenge',
+  '3 live workflows + 1 portfolio-ready project (CV Screener + Notion Talent Board)',
+]
+
 export default function WorkshopRegisterPage() {
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <>
+      {/* Breadcrumb strip */}
+      <div className="border-b-[3px] border-black bg-white px-6 sm:px-10 py-3">
+        <nav className="flex items-center gap-2 text-[0.72rem] uppercase tracking-[1px] text-[color:var(--color-gray-mid)]">
+          <Link href="/workshops" className="hover:text-red">Workshops</Link>
+          <span>/</span>
+          <Link href="/workshops/n8n-launchpad-may-2026" className="hover:text-red">n8n Launchpad</Link>
+          <span>/</span>
+          <span className="text-black">Register</span>
+        </nav>
+      </div>
 
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs text-brand-muted mb-8">
-        <Link href="/workshops" className="hover:text-brand-accent transition-colors">
-          Workshops
-        </Link>
-        <span>/</span>
-        <Link
-          href="/workshops/n8n-launchpad-may-2026"
-          className="hover:text-brand-accent transition-colors"
-        >
-          n8n Launchpad
-        </Link>
-        <span>/</span>
-        <span className="text-brand-light">Register</span>
-      </nav>
+      <SectionHeader
+        eyebrow="Workshop Registration"
+        title="n8n Launchpad"
+        subtitle="From Zero to Portfolio in 5 Hours."
+      />
 
-      {/* Header */}
-      <div className="mb-10">
-        <p className="text-brand-accent text-sm font-semibold tracking-widest uppercase mb-3">
-          Workshop Registration
-        </p>
-        <h1 className="text-3xl md:text-4xl font-display font-black text-brand-light leading-tight">
-          n8n Launchpad
-        </h1>
-        <p className="text-xl text-brand-accent font-semibold mt-1">
-          From Zero to Portfolio in 5 Hours
-        </p>
+      {/* Detail cells — 4-col bordered grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 border-b-[3px] border-black bg-white">
+        {DETAILS.map((d, i) => (
+          <div
+            key={d.label}
+            className={[
+              'p-5 border-b-[3px] border-black sm:border-b-0',
+              i < DETAILS.length - 1 ? 'sm:border-r-[3px] sm:border-black' : '',
+              i % 2 === 0 && i === DETAILS.length - 2 ? '' : '',
+              i % 2 === 0 ? 'border-r-[3px] border-black sm:border-r-[3px]' : '',
+            ].join(' ')}
+          >
+            <p className="text-[0.68rem] uppercase tracking-[2px] text-red">{d.label}</p>
+            <p className="font-editorial text-black text-[1.8rem] leading-none mt-2">{d.value}</p>
+          </div>
+        ))}
+      </div>
 
-        {/* Key detail cards */}
-        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {DETAILS.map(({ label, value }) => (
-            <div
-              key={label}
-              className="rounded-xl border border-brand-muted/20 bg-brand-mid p-4 text-center"
-            >
-              <p className="text-xs text-brand-muted mb-1">{label}</p>
-              <p className="text-sm font-semibold text-brand-light">{value}</p>
-            </div>
+      {/* Perks strip */}
+      <div className="p-6 sm:p-10 border-b-[3px] border-black bg-red text-white">
+        <p className="text-[0.72rem] font-semibold uppercase tracking-[2px] mb-3">What you&apos;ll get</p>
+        <ul className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {PERKS.map((p) => (
+            <li key={p} className="flex items-start gap-3 text-[0.9rem] leading-[1.6]">
+              <span className="text-white font-bold flex-shrink-0">✓</span>
+              <span>{p}</span>
+            </li>
           ))}
-        </div>
-
-        {/* Perks */}
-        <div className="mt-5 rounded-xl border border-brand-accent/20 bg-brand-accent/5 px-5 py-4">
-          <p className="text-sm font-semibold text-brand-accent mb-2">What you&apos;ll get</p>
-          <ul className="text-sm text-gray-300 space-y-1">
-            <li className="flex items-start gap-2">
-              <span className="text-brand-accent mt-0.5 flex-shrink-0">✓</span>
-              Certificate for all attendees
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-brand-accent mt-0.5 flex-shrink-0">✓</span>
-              Competency Letter for anyone who completes the special home challenge
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-brand-accent mt-0.5 flex-shrink-0">✓</span>
-              3 live workflows + 1 portfolio-ready project (CV Screener + Notion Talent Board)
-            </li>
-          </ul>
-        </div>
+        </ul>
       </div>
 
-      {/* Form card */}
-      <div className="rounded-2xl border border-brand-muted/20 bg-brand-mid p-6 sm:p-8">
-        <h2 className="text-xl font-display font-bold text-brand-light mb-1">
-          Your Details
-        </h2>
-        <p className="text-sm text-brand-muted mb-7">
-          All fields are required unless marked otherwise.
-        </p>
-        <WorkshopRegistrationForm />
+      {/* Form */}
+      <SectionHeader eyebrow="Fill In Your Details" title="Your Application" subtitle="All fields are required unless marked otherwise." />
+      <div className="p-6 sm:p-10 border-b-[3px] border-black bg-white">
+        <div className="max-w-2xl mx-auto border-[3px] border-black bg-white p-8">
+          <WorkshopRegistrationForm />
+        </div>
       </div>
-
-    </div>
+    </>
   )
 }

@@ -13,52 +13,38 @@ export default function GlobalError({
     console.error('[GlobalError]', error)
   }, [error])
 
+  // Editorial-bold error page (renders its own <html>/<body> since it's a root
+  // error boundary). Fonts come from cached CSS.
   return (
     <html lang="en">
-      <body className="min-h-screen bg-[#0d0d0d] flex flex-col items-center justify-center px-4 text-center font-sans">
-
-        <div className="mb-8 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-            <span className="text-red-400 font-black text-lg">!</span>
-          </div>
-          <div className="text-left">
-            <p className="text-white font-bold leading-tight">skillSYNC</p>
-            <p className="text-zinc-500 text-xs">× skillIT</p>
-          </div>
-        </div>
-
-        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3">
-          Something went wrong
+      <body className="min-h-screen bg-white text-black flex flex-col items-center justify-center px-6 text-center" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <p className="text-[0.7rem] font-semibold uppercase tracking-[3px] text-[#E94560] mb-4">Error</p>
+        <h1 className="leading-[0.9] tracking-[2px] text-black text-[4rem] sm:text-[6rem]" style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}>
+          SOMETHING BROKE.
         </h1>
-        <p className="text-zinc-400 text-sm max-w-xs mb-10">
-          An unexpected error occurred. Please try again or return to the home page.
+        <p className="text-[color:#666] max-w-md leading-[1.7] mt-6">
+          An unexpected error occurred. Please try again, or head back to the homepage.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={reset}
-            className="px-6 py-2.5 bg-red-500 text-white rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors"
-          >
+        <div className="mt-8 inline-flex">
+          <button onClick={reset} className="px-6 py-3 bg-black text-white border-[3px] border-black uppercase text-sm tracking-[1px] hover:bg-[#E94560] hover:border-[#E94560] transition-colors">
             Try again
           </button>
-          <a
-            href="/"
-            className="px-6 py-2.5 bg-zinc-800 text-zinc-200 rounded-lg text-sm font-semibold hover:bg-zinc-700 transition-colors"
-          >
+          <a href="/" className="px-6 py-3 bg-white text-black border-[3px] border-black border-l-0 uppercase text-sm tracking-[1px] hover:bg-black hover:text-white transition-colors">
             Back to home
           </a>
         </div>
 
         {error.digest && (
-          <p className="mt-4 text-xs text-zinc-600">Error ID: {error.digest}</p>
+          <p className="mt-6 text-[0.7rem] uppercase tracking-[2px] text-[color:#999]">Error ID: {error.digest}</p>
         )}
 
         {process.env.NODE_ENV === 'development' && (
-          <details className="mt-6 text-left w-full max-w-xl">
-            <summary className="text-xs text-zinc-600 cursor-pointer hover:text-zinc-400 select-none">
+          <details className="mt-8 text-left w-full max-w-xl">
+            <summary className="text-xs text-[color:#666] cursor-pointer hover:text-black select-none uppercase tracking-[1px]">
               Error details (dev only)
             </summary>
-            <pre className="mt-2 text-xs text-red-400/80 bg-zinc-900/80 border border-zinc-800 rounded-lg p-4 overflow-auto whitespace-pre-wrap break-all leading-relaxed">
+            <pre className="mt-2 text-xs text-[#E94560] bg-[color:#f5f0eb] border-[3px] border-black p-4 overflow-auto whitespace-pre-wrap break-all leading-relaxed">
               {error.message}
               {error.stack ? '\n\n' + error.stack : ''}
             </pre>

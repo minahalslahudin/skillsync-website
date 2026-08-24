@@ -2,7 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   ROOT VARIABLES — editorial-bold design system (public site)
+   ========================================================================== */
+:root {
+  --color-black:       #080808;
+  --color-white:       #ffffff;
+  --color-red:         #E94560;
+  --color-off-white:   #f5f0eb;
+  --color-gray-light:  #f0f0f0;
+  --color-gray-mid:    #999999;
+  --color-gray-dark:   #666666;
+  --color-red-muted:   rgba(233, 69, 96, 0.10);
+  --color-red-border:  rgba(233, 69, 96, 0.20);
+  --border-editorial:  3px solid #080808;
+}
+
 html {
+  /* Body still dark for admin/dashboard; per-page bg overrides where needed */
   background-color: #1A1A2E;
   scroll-behavior: smooth;
 }
@@ -11,32 +28,118 @@ body {
   color: #E2E8F0;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+/* Custom scrollbar (unchanged) */
+::-webkit-scrollbar          { width: 6px; height: 6px; }
+::-webkit-scrollbar-track    { background: #0D0D1A; }
+::-webkit-scrollbar-thumb    { background: #E94560; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #c73652; }
+*                            { scrollbar-width: thin; scrollbar-color: #E94560 #0D0D1A; }
 
-::-webkit-scrollbar-track {
-  background: #0D0D1A;
+/* ==========================================================================
+   .public-shell — scope for the editorial-bold public site
+   Everything under (public)/ layout gets wrapped in this class.
+   ========================================================================== */
+.public-shell {
+  background: var(--color-white);
+  color: var(--color-black);
+  font-family: var(--font-inter), Inter, sans-serif;
+  min-height: 100vh;
 }
-
-::-webkit-scrollbar-thumb {
-  background: #E94560;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #c73652;
-}
-
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #E94560 #0D0D1A;
-}
+.public-shell ::-webkit-scrollbar-track { background: var(--color-gray-light); }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  .text-balance { text-wrap: balance; }
+
+  /* ── Editorial borders — 3px solid black, the signature ────────────────── */
+  .border-ed        { border: 3px solid var(--color-black); }
+  .border-ed-t      { border-top: 3px solid var(--color-black); }
+  .border-ed-b      { border-bottom: 3px solid var(--color-black); }
+  .border-ed-l      { border-left: 3px solid var(--color-black); }
+  .border-ed-r      { border-right: 3px solid var(--color-black); }
+
+  /* ── Editorial typography ──────────────────────────────────────────────── */
+  .font-editorial   { font-family: var(--font-bebas), 'Bebas Neue', Impact, sans-serif; }
+  .track-ed         { letter-spacing: 2px; }
+  .track-ed-wide    { letter-spacing: 3px; }
+
+  /* ── Editorial buttons ─────────────────────────────────────────────────── */
+  .btn-ed-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-black);
+    color: var(--color-white);
+    padding: 0.9rem 2rem;
+    font-size: 0.82rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: 3px solid var(--color-black);
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    font-weight: 500;
+  }
+  .btn-ed-primary:hover {
+    background: var(--color-red);
+    border-color: var(--color-red);
+  }
+
+  .btn-ed-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: var(--color-black);
+    padding: 0.9rem 2rem;
+    font-size: 0.82rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: 3px solid var(--color-black);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    font-weight: 500;
+  }
+  .btn-ed-outline:hover {
+    background: var(--color-black);
+    color: var(--color-white);
+  }
+
+  .btn-ed-red {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-white);
+    color: var(--color-red);
+    padding: 0.75rem 1.5rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-ed-red:hover { opacity: 0.85; }
+
+  .btn-ed-sm {
+    padding: 0.55rem 1.5rem;
+    font-size: 0.78rem;
+    letter-spacing: 1px;
+  }
+
+  /* ── Editorial ticker (scrolling strip) ─────────────────────────────────── */
+  @keyframes ed-ticker {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .ed-ticker-track {
+    display: flex;
+    animation: ed-ticker 18s linear infinite;
+    white-space: nowrap;
+  }
+
+  /* ── Word reveal (for future hero staggered animation) ─────────────────── */
+  @keyframes ed-word-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 }

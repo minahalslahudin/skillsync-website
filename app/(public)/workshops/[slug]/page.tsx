@@ -4,12 +4,9 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { getEventBySlug } from '@/lib/supabase/queries/events'
 import { formatDate } from '@/lib/utils/formatDate'
-import Badge from '@/components/ui/Badge'
 import DynamicEventForm from '@/components/forms/DynamicEventForm'
 
-interface Props {
-  params: { slug: string }
-}
+interface Props { params: { slug: string } }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const event = await getEventBySlug(params.slug)
@@ -34,54 +31,47 @@ export default async function WorkshopDetailPage({ params }: Props) {
   const deadlinePassed  = event.registration_deadline ? new Date(event.registration_deadline) < now : false
   const registrationActive = event.registration_open && isUpcomingEvent && !deadlinePassed
   const seatsLeft = event.seats != null ? event.seats - event.seats_taken : null
-  const fillPct   = event.seats && event.seats > 0
-    ? Math.min((event.seats_taken / event.seats) * 100, 100)
-    : null
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-      {/* Cover */}
+    <>
+      {/* Cover strip */}
       {event.cover_image && (
-        <div className="relative w-full h-64 rounded-2xl overflow-hidden mb-10">
-          <Image
-            src={event.cover_image}
-            alt={event.title}
-            fill
-            className="object-cover"
-            priority
-          />
+        <div className="relative w-full h-64 sm:h-80 border-b-[3px] border-black">
+          <Image src={event.cover_image} alt={event.title} fill className="object-cover" priority />
         </div>
       )}
 
-      <div className="flex flex-col lg:flex-row gap-12">
-        {/* Left: content */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap mb-4">
-            <Badge variant="info">Workshop</Badge>
-            {event.is_paid
-              ? <Badge variant="warning">R{event.price}</Badge>
-              : <Badge variant="success">Free</Badge>
-            }
-          </div>
+      {/* Header */}
+      <div className="border-b-[3px] border-black bg-white px-6 sm:px-10 py-10">
+        <div className="flex items-center gap-2 flex-wrap mb-4">
+          <span className="text-[0.62rem] font-semibold uppercase tracking-[2px] px-2 py-0.5 border border-black text-black">
+            Workshop
+          </span>
+          <span className={`text-[0.62rem] font-semibold uppercase tracking-[2px] px-2 py-0.5 ${event.is_paid ? 'bg-black text-white' : 'bg-red text-white'}`}>
+            {event.is_paid ? `Rs ${event.price}` : 'FREE'}
+          </span>
+        </div>
+        <h1 className="font-editorial text-black text-[2.5rem] sm:text-[4rem] leading-[0.95] tracking-[2px]">
+          {event.title.toUpperCase()}
+        </h1>
+        {event.description && (
+          <p className="mt-6 text-[0.95rem] text-[color:var(--color-gray-dark)] leading-[1.8] max-w-3xl">
+            {event.description}
+          </p>
+        )}
+      </div>
 
-          <h1 className="text-3xl md:text-4xl font-display font-bold text-brand-light">
-            {event.title}
-          </h1>
-
-          {event.description && (
-            <p className="mt-4 text-gray-400 leading-relaxed">{event.description}</p>
-          )}
-
-          {/* Tools covered */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 border-b-[3px] border-black bg-white">
+        {/* Left/main: content (2 cols) */}
+        <div className="lg:col-span-2 p-6 sm:p-10 lg:border-r-[3px] lg:border-black">
           {event.tools_covered?.length > 0 && (
-            <div className="mt-6">
-              <p className="text-sm font-medium text-brand-light mb-2">Tools covered</p>
+            <div>
+              <p className="text-[0.7rem] font-semibold uppercase tracking-[2px] text-red mb-3">
+                Tools covered
+              </p>
               <div className="flex flex-wrap gap-2">
                 {event.tools_covered.map((tool) => (
-                  <span
-                    key={tool}
-                    className="text-xs px-2 py-1 rounded-full bg-brand-mid border border-brand-muted/20 text-brand-muted"
-                  >
+                  <span key={tool} className="text-[0.7rem] uppercase tracking-[1px] px-2 py-1 border border-black text-black">
                     {tool}
                   </span>
                 ))}
@@ -89,98 +79,61 @@ export default async function WorkshopDetailPage({ params }: Props) {
             </div>
           )}
 
-          {/* Attendee stats */}
           {!event.external_registration_url && (event.seats_taken > 0 || seatsLeft !== null) && (
-            <div className="mt-8 grid grid-cols-2 gap-4">
-              <div className="rounded-xl border border-brand-muted/20 bg-brand-mid p-4 text-center">
-                <p className="text-2xl font-display font-black text-brand-accent">
-                  {event.seats_taken}
+            <div className="mt-8 grid grid-cols-2 border-[3px] border-black">
+              <div className="p-5 border-r-[3px] border-black">
+                <p className="font-editorial text-red text-[2.5rem] leading-none">{event.seats_taken}</p>
+                <p className="text-[0.72rem] uppercase tracking-[2px] text-[color:var(--color-gray-mid)] mt-1">
+                  Registered
                 </p>
-                <p className="text-xs text-brand-muted mt-0.5">Registered</p>
               </div>
               {seatsLeft !== null && (
-                <div className="rounded-xl border border-brand-muted/20 bg-brand-mid p-4 text-center">
-                  <p className={`text-2xl font-display font-black ${seatsLeft <= 5 ? 'text-red-400' : 'text-brand-accent'}`}>
+                <div className="p-5">
+                  <p className={`font-editorial text-[2.5rem] leading-none ${seatsLeft <= 5 ? 'text-red' : 'text-black'}`}>
                     {seatsLeft}
                   </p>
-                  <p className="text-xs text-brand-muted mt-0.5">Seats left</p>
+                  <p className="text-[0.72rem] uppercase tracking-[2px] text-[color:var(--color-gray-mid)] mt-1">
+                    Seats left
+                  </p>
                 </div>
               )}
             </div>
           )}
 
-          {/* Capacity bar */}
-          {fillPct !== null && !event.external_registration_url && (
-            <div className="mt-4 flex flex-col gap-1.5">
-              <div className="flex justify-between text-xs text-brand-muted">
-                <span>Capacity</span>
-                <span>{Math.round(fillPct)}% full</span>
-              </div>
-              <div className="h-1.5 rounded-full bg-brand-muted/20 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-brand-accent transition-all duration-700"
-                  style={{ width: `${fillPct}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Resources link */}
           {event.resources_url && (
-            <div className="mt-6">
-              <a
-                href={event.resources_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-brand-accent hover:underline"
-              >
-                Workshop resources ↗
-              </a>
-            </div>
+            <a
+              href={event.resources_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-ed-outline btn-ed-sm mt-8 inline-flex"
+            >
+              Workshop Resources ↗
+            </a>
           )}
 
-          {/* Content body */}
           {event.content && (
             <div
-              className="mt-10 prose prose-invert prose-sm max-w-none text-gray-400"
+              className="mt-10 text-[0.95rem] text-[color:var(--color-gray-dark)] leading-[1.8] [&_p]:mb-4 [&_h2]:font-editorial [&_h2]:text-black [&_h2]:text-2xl [&_h2]:tracking-[1px] [&_h2]:mt-6 [&_h2]:mb-3 [&_ul]:list-disc [&_ul]:pl-5"
               dangerouslySetInnerHTML={{ __html: event.content }}
             />
           )}
         </div>
 
         {/* Right: sticky sidebar */}
-        <div className="lg:w-80 flex-shrink-0">
-          <div className="rounded-xl border border-brand-muted/20 bg-brand-mid p-6 sticky top-24">
-            <div className="flex flex-col gap-3 mb-6 text-sm text-brand-muted">
+        <aside className="p-6 sm:p-10 bg-[color:var(--color-off-white)] border-t-[3px] lg:border-t-0 border-black">
+          <div className="border-[3px] border-black bg-white p-6 sticky top-24">
+            <div className="flex flex-col gap-3 mb-6 text-[0.85rem]">
               {event.date && (
-                <div className="flex justify-between">
-                  <span>Date</span>
-                  <span className="text-brand-light">{formatDate(event.date)}</span>
-                </div>
+                <Row label="Date" value={formatDate(event.date)} />
               )}
               {event.location && (
-                <div className="flex justify-between">
-                  <span>Location</span>
-                  <span className="text-brand-light">
-                    {event.is_online ? 'Online' : event.location}
-                  </span>
-                </div>
+                <Row label="Location" value={event.is_online ? 'Online' : event.location} />
               )}
               {seatsLeft != null && !event.external_registration_url && (
-                <div className="flex justify-between">
-                  <span>Seats left</span>
-                  <span className={seatsLeft <= 5 ? 'text-red-400' : 'text-brand-light'}>
-                    {seatsLeft}
-                  </span>
-                </div>
+                <Row label="Seats left" value={String(seatsLeft)} accent={seatsLeft <= 5} />
               )}
               {event.registration_deadline && (
-                <div className="flex justify-between">
-                  <span>Register by</span>
-                  <span className="text-brand-light">
-                    {formatDate(event.registration_deadline)}
-                  </span>
-                </div>
+                <Row label="Register by" value={formatDate(event.registration_deadline)} />
               )}
             </div>
 
@@ -189,7 +142,7 @@ export default async function WorkshopDetailPage({ params }: Props) {
                 href={event.external_registration_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 font-bold text-white bg-brand-accent hover:bg-[#c73652] px-5 py-3 rounded-lg transition-colors duration-200 text-sm"
+                className="btn-ed-primary w-full"
               >
                 Register Now
               </a>
@@ -197,39 +150,44 @@ export default async function WorkshopDetailPage({ params }: Props) {
               <>
                 {registrationActive && !event.is_paid && (
                   <>
-                    <p className="text-sm font-medium text-brand-light mb-4">Register</p>
+                    <p className="text-[0.72rem] font-semibold uppercase tracking-[2px] text-red mb-4">Register</p>
                     <DynamicEventForm event={event} />
                   </>
                 )}
 
-                {/* Upcoming paid workshop — custom registration form */}
                 {registrationActive && event.is_paid && (
                   <div className="flex flex-col gap-3">
-                    <p className="text-sm text-gray-400 leading-relaxed">
+                    <p className="text-[0.85rem] text-[color:var(--color-gray-dark)] leading-[1.7]">
                       Registration is open. Complete your registration and payment to secure your seat.
                     </p>
-                    <Link
-                      href="/workshops/register"
-                      className="w-full inline-flex items-center justify-center gap-2 font-bold text-white bg-brand-accent hover:bg-[#c73652] px-5 py-3 rounded-lg transition-colors duration-200 text-sm"
-                    >
-                      Register Now — Rs {event.price}
+                    <Link href="/workshops/register" className="btn-ed-primary w-full">
+                      Register — Rs {event.price}
                     </Link>
-                    <p className="text-xs text-brand-muted text-center">
+                    <p className="text-[0.7rem] uppercase tracking-[1px] text-[color:var(--color-gray-mid)] text-center">
                       Seats are limited · Confirmed after payment verification
                     </p>
                   </div>
                 )}
 
                 {!registrationActive && (
-                  <p className="text-sm text-brand-muted text-center py-4">
-                    {deadlinePassed ? 'Registration deadline has passed.' : 'Registration is closed.'}
+                  <p className="text-[0.85rem] text-[color:var(--color-gray-mid)] text-center py-4 uppercase tracking-[2px]">
+                    {deadlinePassed ? 'Deadline has passed.' : 'Registration closed.'}
                   </p>
                 )}
               </>
             )}
           </div>
-        </div>
+        </aside>
       </div>
+    </>
+  )
+}
+
+function Row({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className="flex justify-between items-baseline gap-3 pb-2 border-b border-black/15">
+      <span className="text-[0.7rem] uppercase tracking-[2px] text-[color:var(--color-gray-mid)]">{label}</span>
+      <span className={`text-[0.85rem] font-semibold ${accent ? 'text-red' : 'text-black'}`}>{value}</span>
     </div>
   )
 }

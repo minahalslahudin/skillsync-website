@@ -2,180 +2,121 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import Button from '@/components/ui/Button'
 
-const fadeUp = {
-  initial: { opacity: 0, y: 28 },
-  animate: { opacity: 1, y: 0 },
-}
+// Editorial-bold "who we are" section.
+// - Section header row with 3px bottom border.
+// - Two black/red side-by-side panels for the twin brands.
+// - Timeline as a 4-cell bordered grid.
 
 const PHASES = [
-  {
-    label: 'Phase 0',
-    name: 'Foundation',
-    desc: 'Community setup, tools chosen, and the first cohort recruited.',
-  },
-  {
-    label: 'Phase 1',
-    name: 'Training',
-    desc: 'Fellows onboarded through structured workshops and skill tracks.',
-  },
-  {
-    label: 'Phase 2',
-    name: 'Agency Work',
-    desc: 'Real client projects delivered under the skillIT brand.',
-  },
-  {
-    label: "What's Next",
-    name: 'Scale',
-    desc: 'Expanding to multiple cities and opening fellowship applications widely.',
-  },
+  { label: 'Phase 0',      name: 'Foundation',  desc: 'Community setup, tools chosen, first cohort recruited.' },
+  { label: 'Phase 1',      name: 'Training',    desc: 'Fellows onboarded through structured workshops and tracks.' },
+  { label: 'Phase 2',      name: 'Agency Work', desc: 'Real client projects delivered under the skillIT brand.' },
+  { label: "What's Next",  name: 'Scale',       desc: 'Expanding to multiple cities, opening applications widely.' },
 ]
 
 export default function AboutSection() {
   return (
-    <section className="py-24 bg-brand-dark px-4">
-      <div className="max-w-6xl mx-auto flex flex-col gap-20">
+    <section className="border-b-[3px] border-black bg-white">
+      {/* Section header */}
+      <div className="px-6 sm:px-10 py-10 border-b-[3px] border-black">
+        <p className="text-[0.7rem] font-semibold uppercase tracking-[3px] text-red mb-3">
+          Who We Are
+        </p>
+        <h2 className="font-editorial text-black text-[3rem] sm:text-[4rem] leading-[0.9] tracking-[2px]">
+          TWO BRANDS. ONE MISSION.
+        </h2>
+        <p className="mt-4 text-[0.9rem] text-[color:var(--color-gray-dark)] leading-[1.8] max-w-[560px]">
+          Based in Pakistan — building globally-ready talent through training and real client work.
+        </p>
+      </div>
 
-        {/* Heading */}
+      {/* Twin brand panels */}
+      <div className="grid grid-cols-1 md:grid-cols-2 border-b-[3px] border-black">
+        {/* skillIT (black panel) */}
         <motion.div
-          initial="initial"
-          whileInView="animate"
-          viewport={{ once: true }}
-          transition={{ staggerChildren: 0.1 }}
-          className="text-center"
-        >
-          <motion.p
-            variants={fadeUp}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="text-brand-accent text-sm font-semibold tracking-widest uppercase mb-3"
-          >
-            Who We Are
-          </motion.p>
-          <motion.h2
-            variants={fadeUp}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="text-3xl md:text-4xl font-display font-bold text-brand-light mb-4"
-          >
-            Two brands,{' '}
-            <span className="text-brand-accent">one mission</span>
-          </motion.h2>
-          <motion.p
-            variants={fadeUp}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="text-base text-gray-400 max-w-2xl mx-auto leading-relaxed"
-          >
-            Based in Pakistan — building globally-ready talent through training and real client work.
-          </motion.p>
-        </motion.div>
-
-        {/* Brand cards — two columns */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* skillIT */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="relative rounded-2xl border-2 border-[#0F6B7A]/50 bg-brand-mid p-8 flex flex-col gap-4 overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 w-40 h-40 bg-[#0F6B7A]/10 rounded-full blur-3xl pointer-events-none" />
-            <p className="text-2xl font-display font-black text-[#7dd3da]">skillIT</p>
-            <p className="text-xs font-semibold text-brand-muted uppercase tracking-wider">
-              Creative Agency
-            </p>
-            <p className="text-base text-gray-300 leading-relaxed flex-1">
-              Our agency arm — delivering digital solutions for ambitious clients while giving our
-              fellows hands-on experience on live projects.
-            </p>
-            <Link
-              href="/skillit"
-              className="self-start text-sm font-semibold text-[#7dd3da] hover:underline"
-            >
-              See agency work →
-            </Link>
-          </motion.div>
-
-          {/* skillSYNC */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-            className="relative rounded-2xl border-2 border-brand-accent/50 bg-brand-mid p-8 flex flex-col gap-4 overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 w-40 h-40 bg-brand-accent/10 rounded-full blur-3xl pointer-events-none" />
-            <p className="text-2xl font-display font-black text-brand-accent">skillSYNC</p>
-            <p className="text-xs font-semibold text-brand-muted uppercase tracking-wider">
-              Training Platform
-            </p>
-            <p className="text-base text-gray-300 leading-relaxed flex-1">
-              Our training arm — a structured fellowship programme that takes motivated young Pakistanisthrough real tech skills: design, development, data, and more.
-            </p>
-            <Link
-              href="/skillsync"
-              className="self-start text-sm font-semibold text-brand-accent hover:underline"
-            >
-              Explore training →
-            </Link>
-          </motion.div>
-        </div>
-
-        {/* Phase timeline — horizontal */}
-        <div>
-          <motion.h3
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="text-center text-lg font-display font-bold text-brand-light mb-12"
-          >
-            Our Journey
-          </motion.h3>
-
-          <div className="relative">
-            {/* Connecting line (desktop) */}
-            <div className="hidden md:block absolute top-5 left-[12.5%] right-[12.5%] h-px bg-brand-muted/20" />
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              {PHASES.map((phase, i) => (
-                <motion.div
-                  key={phase.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.45, delay: i * 0.1, ease: 'easeOut' }}
-                  className="flex flex-col items-center text-center gap-3"
-                >
-                  <div className="relative z-10 h-10 w-10 rounded-full bg-brand-darker border-2 border-brand-accent/60 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-bold text-brand-accent">{i + 1}</span>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-brand-muted font-semibold uppercase tracking-widest">
-                      {phase.label}
-                    </p>
-                    <p className="text-sm font-semibold text-brand-light mt-0.5">{phase.name}</p>
-                    <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">{phase.desc}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="text-center"
+          className="p-8 sm:p-10 bg-black text-white md:border-r-[3px] md:border-black border-b-[3px] md:border-b-0 border-black flex flex-col gap-4"
         >
-          <Link href="/about">
-            <Button variant="secondary" size="md">Learn More About Us</Button>
+          <p className="font-editorial text-white text-[2.5rem] leading-none tracking-[2px]">
+            skillIT
+          </p>
+          <p className="text-[0.72rem] font-semibold uppercase tracking-[2px] text-white/60">
+            Creative Agency
+          </p>
+          <p className="text-[0.9rem] text-white/80 leading-[1.7] flex-1">
+            Our agency arm — delivering digital solutions for ambitious clients while giving our fellows
+            hands-on experience on live projects.
+          </p>
+          <Link href="/skillit" className="btn-ed-red mt-2 w-fit">
+            See agency work →
           </Link>
         </motion.div>
 
+        {/* skillSYNC (red panel) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="p-8 sm:p-10 bg-red text-white flex flex-col gap-4"
+        >
+          <p className="font-editorial text-white text-[2.5rem] leading-none tracking-[2px]">
+            skillSYNC
+          </p>
+          <p className="text-[0.72rem] font-semibold uppercase tracking-[2px] text-white/70">
+            Training Platform
+          </p>
+          <p className="text-[0.9rem] text-white/90 leading-[1.7] flex-1">
+            Our training arm — a structured fellowship programme that takes motivated young Pakistanis
+            through real tech skills: automation, LLMs, dev, and more.
+          </p>
+          <Link
+            href="/skillsync"
+            className="btn-ed-red mt-2 w-fit"
+            style={{ background: '#080808', color: '#fff' }}
+          >
+            Explore training →
+          </Link>
+        </motion.div>
+      </div>
+
+      {/* Journey timeline */}
+      <div>
+        <div className="px-6 sm:px-10 py-6 border-b-[3px] border-black">
+          <h3 className="font-editorial text-black text-[2rem] leading-none tracking-[2px]">
+            OUR JOURNEY
+          </h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4">
+          {PHASES.map((p, i) => (
+            <motion.div
+              key={p.label}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: i * 0.08 }}
+              className={[
+                'p-6 sm:p-8 border-b-[3px] md:border-b-0 border-black',
+                i < PHASES.length - 1 ? 'md:border-r-[3px] md:border-black' : '',
+              ].join(' ')}
+            >
+              <div className="font-editorial text-red text-[3rem] leading-none">0{i + 1}</div>
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[2px] text-[color:var(--color-gray-mid)] mt-2">
+                {p.label}
+              </p>
+              <p className="text-[0.95rem] font-semibold uppercase tracking-[1px] text-black mt-1">
+                {p.name}
+              </p>
+              <p className="text-[0.78rem] text-[color:var(--color-gray-mid)] leading-[1.6] mt-2">
+                {p.desc}
+              </p>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   )

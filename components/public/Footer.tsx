@@ -6,8 +6,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
 import { FaLinkedin, FaInstagram, FaYoutube, FaGithub } from 'react-icons/fa'
-import Input from '@/components/ui/Input'
-import Button from '@/components/ui/Button'
+
+// Editorial-bold footer.
+// Black bar top-line (matches inspiration's black footer), then a 3-col
+// grid with brand, links, newsletter. Newsletter form kept fully functional
+// against the existing /api/newsletter endpoint.
 
 const schema = z.object({ email: z.string().email('Enter a valid email') })
 type FormValues = z.infer<typeof schema>
@@ -24,19 +27,15 @@ const QUICK_LINKS = [
 ]
 
 const SOCIALS = [
-  { href: 'https://linkedin.com/company/skillsync-za',  icon: FaLinkedin,  label: 'LinkedIn' },
-  { href: 'https://instagram.com/skillsync.za',         icon: FaInstagram, label: 'Instagram' },
-  { href: 'https://youtube.com/@skillsyncza',           icon: FaYoutube,   label: 'YouTube' },
-  { href: 'https://github.com/skillsync-za',            icon: FaGithub,    label: 'GitHub' },
+  { href: 'https://linkedin.com/company/skill-synchronized', icon: FaLinkedin,  label: 'LinkedIn' },
+  { href: 'https://instagram.com/nexique_',                  icon: FaInstagram, label: 'Instagram' },
+  { href: 'https://youtube.com/',                            icon: FaYoutube,   label: 'YouTube' },
+  { href: 'https://github.com/skillitco',                    icon: FaGithub,    label: 'GitHub' },
 ]
 
 export default function Footer() {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) })
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
+    useForm<FormValues>({ resolver: zodResolver(schema) })
 
   async function onSubmit(values: FormValues) {
     const res = await fetch('/api/newsletter', {
@@ -44,109 +43,100 @@ export default function Footer() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(values),
     })
-    if (res.ok) {
-      toast.success("You're subscribed!")
-      reset()
-    } else if (res.status === 409) {
-      toast("You're already on the list.", { icon: 'ℹ️' })
-    } else {
-      toast.error('Something went wrong. Please try again.')
-    }
+    if (res.ok)                  { toast.success("You're subscribed!"); reset() }
+    else if (res.status === 409) { toast("You're already on the list.", { icon: 'ℹ️' }) }
+    else                         { toast.error('Something went wrong. Please try again.') }
   }
 
   return (
-    <footer className="bg-brand-darker border-t border-white/10 mt-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-
-          {/* Column 1: Brand + socials */}
-          <div className="flex flex-col gap-4">
-            <Link
-              href="/"
-              className="font-display font-black text-2xl text-brand-light hover:text-brand-accent transition-colors w-fit"
-            >
-              skill<span className="text-brand-accent">SYNC</span>
-            </Link>
-            <p className="text-sm text-brand-muted leading-relaxed max-w-xs">
-              Empowering students with real-world tech skills through workshops,
-              live projects, and a thriving community.
-            </p>
-            <div className="flex items-center gap-4 mt-2">
-              {SOCIALS.map(({ href, icon: Icon, label }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  className="text-brand-muted hover:text-brand-accent transition-colors"
-                >
-                  <Icon className="h-5 w-5" />
-                </a>
-              ))}
-            </div>
-          </div>
-
-          {/* Column 2: Quick links */}
-          <div>
-            <h3 className="text-sm font-semibold text-brand-light uppercase tracking-wider mb-5">
-              Quick Links
-            </h3>
-            <ul className="flex flex-col gap-2.5">
-              {QUICK_LINKS.map(({ href, label }) => (
-                <li key={href}>
-                  <Link
-                    href={href}
-                    className="text-sm text-brand-muted hover:text-brand-accent transition-colors"
-                  >
-                    {label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Column 3: Newsletter */}
-          <div>
-            <h3 className="text-sm font-semibold text-brand-light uppercase tracking-wider mb-5">
-              Stay Updated
-            </h3>
-            <p className="text-sm text-brand-muted mb-5 leading-relaxed">
-              Get notified about new workshops, events, and volunteer opportunities.
-            </p>
-            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
-              <Input
-                {...register('email')}
-                type="email"
-                placeholder="your@email.com"
-                error={errors.email?.message}
-                aria-label="Email address"
-              />
-              <Button
-                type="submit"
-                variant="primary"
-                size="sm"
-                loading={isSubmitting}
+    <footer className="border-t-[3px] border-black bg-white">
+      <div className="grid grid-cols-1 md:grid-cols-3">
+        {/* Column 1: Brand + socials */}
+        <div className="p-8 sm:p-10 md:border-r-[3px] md:border-black flex flex-col gap-5 border-b-[3px] md:border-b-0 border-black">
+          <Link href="/" className="font-editorial text-3xl tracking-[3px] text-black w-fit">
+            skill<span className="text-red">SYNC</span>
+          </Link>
+          <p className="text-[0.85rem] text-[color:var(--color-gray-dark)] leading-[1.7] max-w-xs">
+            Empowering students with real-world tech skills through workshops,
+            live projects, and a thriving community.
+          </p>
+          <div className="flex items-center gap-4 mt-2">
+            {SOCIALS.map(({ href, icon: Icon, label }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={label}
+                className="text-black hover:text-red transition-colors"
               >
-                Subscribe
-              </Button>
-            </form>
+                <Icon className="h-5 w-5" />
+              </a>
+            ))}
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="mt-14 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-brand-muted">
-            © {new Date().getFullYear()} skillSYNC × skillIT. All rights reserved.
+        {/* Column 2: Quick links */}
+        <div className="p-8 sm:p-10 md:border-r-[3px] md:border-black border-b-[3px] md:border-b-0 border-black">
+          <h3 className="text-[0.72rem] font-semibold text-black uppercase tracking-[2px] mb-5">
+            Quick Links
+          </h3>
+          <ul className="grid grid-cols-2 gap-y-2 gap-x-6">
+            {QUICK_LINKS.map(({ href, label }) => (
+              <li key={href}>
+                <Link
+                  href={href}
+                  className="text-[0.85rem] text-[color:var(--color-gray-dark)] hover:text-red transition-colors"
+                >
+                  {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Column 3: Newsletter */}
+        <div className="p-8 sm:p-10 bg-red text-white">
+          <h3 className="font-editorial text-white text-2xl tracking-[2px] mb-3">
+            STAY UPDATED
+          </h3>
+          <p className="text-[0.82rem] text-white/80 leading-[1.7] mb-5">
+            Get notified about new workshops, events, and volunteer opportunities.
           </p>
-          <div className="flex items-center gap-6">
-            <Link href="/privacy" className="text-xs text-brand-muted hover:text-brand-light transition-colors">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="text-xs text-brand-muted hover:text-brand-light transition-colors">
-              Terms of Use
-            </Link>
-          </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
+            <input
+              {...register('email')}
+              type="email"
+              placeholder="your@email.com"
+              aria-label="Email address"
+              className="w-full bg-white text-black placeholder:text-black/40 border-[3px] border-black px-3 py-2 text-sm focus:outline-none focus:bg-[color:var(--color-off-white)]"
+            />
+            {errors.email && (
+              <p className="text-xs text-white/90">{errors.email.message}</p>
+            )}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="btn-ed-red btn-ed-sm disabled:opacity-60"
+            >
+              {isSubmitting ? 'Subscribing…' : 'Subscribe'}
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {/* Bottom bar */}
+      <div className="border-t-[3px] border-black bg-black flex flex-col sm:flex-row items-center justify-between gap-3 px-6 sm:px-10 py-4">
+        <p className="text-[0.72rem] uppercase tracking-[1px] text-white/50">
+          © {new Date().getFullYear()} skillSYNC × skillIT. All rights reserved.
+        </p>
+        <div className="flex items-center gap-6">
+          <Link href="/privacy" className="text-[0.72rem] uppercase tracking-[1px] text-white/50 hover:text-red transition-colors">
+            Privacy
+          </Link>
+          <Link href="/terms" className="text-[0.72rem] uppercase tracking-[1px] text-white/50 hover:text-red transition-colors">
+            Terms
+          </Link>
         </div>
       </div>
     </footer>

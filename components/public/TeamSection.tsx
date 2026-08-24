@@ -4,6 +4,10 @@ import Image from 'next/image'
 import { motion } from 'framer-motion'
 import type { TeamMemberWithUser } from '@/lib/supabase/queries/users'
 
+// Editorial-bold team grid.
+// Each card = square photo on top, name in Bebas Neue below, red role,
+// grey Inter bio. 3px black border, no rounded corners.
+
 interface TeamSectionProps {
   members: TeamMemberWithUser[]
 }
@@ -11,53 +15,52 @@ interface TeamSectionProps {
 function MemberCard({ member, index }: { member: TeamMemberWithUser; index: number }) {
   const { users: u, custom_title } = member
   const displayRole = custom_title ?? u.role
-  const initials = u.full_name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
+  const initials = u.full_name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-20px' }}
-      transition={{ duration: 0.4, delay: Math.min(index * 0.06, 0.3), ease: 'easeOut' }}
-      className="group flex flex-col items-center text-center rounded-2xl border border-white/[0.06] bg-[#111827] p-7 transition-all duration-300 hover:-translate-y-1 hover:border-brand-accent/30 hover:shadow-[0_8px_40px_rgba(233,69,96,0.12)]"
+      transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.3), ease: 'easeOut' }}
+      whileHover={{ y: -2 }}
+      className="group flex flex-col border-[3px] border-black bg-white transition-colors duration-200 hover:bg-[color:var(--color-off-white)]"
     >
-      {/* Photo */}
-      <div className="relative mb-5 h-24 w-24 flex-shrink-0 overflow-hidden rounded-full ring-2 ring-white/10 transition-all duration-300 group-hover:ring-brand-accent/40">
+      {/* Square photo */}
+      <div className="relative aspect-square w-full overflow-hidden bg-black border-b-[3px] border-black">
         {u.avatar_url ? (
           <Image
             src={u.avatar_url}
             alt={u.full_name}
             fill
-            sizes="96px"
-            className="object-cover"
+            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 100vw"
+            className="object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-brand-accent/15">
-            <span className="text-xl font-bold text-brand-accent">{initials}</span>
+          <div className="flex h-full w-full items-center justify-center bg-black">
+            <span className="font-editorial text-white text-6xl">{initials}</span>
           </div>
         )}
       </div>
 
-      {/* Name */}
-      <h3 className="text-base font-bold leading-snug text-white">{u.full_name}</h3>
-
-      {/* Role */}
-      <p className="mt-1 text-sm font-medium text-brand-accent">{displayRole}</p>
-
-      {/* Department */}
-      {u.department && (
-        <p className="mt-0.5 text-xs text-gray-500">{u.department}</p>
-      )}
-
-      {/* Bio */}
-      {u.bio && (
-        <p className="mt-4 text-xs leading-relaxed text-gray-400 line-clamp-3">{u.bio}</p>
-      )}
+      <div className="p-5 flex flex-col gap-1">
+        <h3 className="font-editorial text-black text-[1.6rem] leading-none tracking-[1px]">
+          {u.full_name}
+        </h3>
+        <p className="text-[0.75rem] font-semibold uppercase tracking-[2px] text-red">
+          {displayRole}
+        </p>
+        {u.department && (
+          <p className="text-[0.7rem] uppercase tracking-[1px] text-[color:var(--color-gray-mid)]">
+            {u.department}
+          </p>
+        )}
+        {u.bio && (
+          <p className="mt-3 text-[0.78rem] leading-[1.6] text-[color:var(--color-gray-dark)] line-clamp-3">
+            {u.bio}
+          </p>
+        )}
+      </div>
     </motion.div>
   )
 }
@@ -65,7 +68,9 @@ function MemberCard({ member, index }: { member: TeamMemberWithUser; index: numb
 export default function TeamSection({ members }: TeamSectionProps) {
   if (members.length === 0) {
     return (
-      <p className="py-12 text-center text-gray-500">Team profiles coming soon.</p>
+      <p className="py-12 text-center text-[color:var(--color-gray-mid)] uppercase tracking-[2px] text-sm">
+        Team profiles coming soon.
+      </p>
     )
   }
 

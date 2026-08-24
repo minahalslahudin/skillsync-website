@@ -4,141 +4,86 @@ import { motion } from 'framer-motion'
 import { FaLinkedin, FaInstagram, FaYoutube, FaGithub, FaWhatsapp } from 'react-icons/fa'
 import type { IconType } from 'react-icons'
 
+// Editorial-bold socials section — grid of bordered cards, no gaps.
+
 interface SocialCard {
   label: string
   handle: string
   desc: string
   href: string
   Icon: IconType
-  iconColor: string
-  borderColor: string
-  buttonClass: string
   buttonLabel: string
-  highlight: boolean
+  featured?: boolean
 }
 
 const SOCIALS: SocialCard[] = [
   {
     label: 'WhatsApp',
     handle: 'Community Channel',
-    desc: 'Join our active WhatsApp community for real-time updates, discussions, and announcements.',
+    desc: 'Real-time updates, discussions, and announcements from the community.',
     href: 'https://whatsapp.com/channel/0029VbCcBcZEquiHv1l8aa3b',
     Icon: FaWhatsapp,
-    iconColor: 'text-[#25D366]',
-    borderColor: 'border-[#25D366]/40 bg-[#25D366]/5',
-    buttonClass: 'border-[#25D366]/50 text-[#25D366] hover:bg-[#25D366]/10',
     buttonLabel: 'Join Group',
-    highlight: true,
+    featured: true,
   },
-  {
-    label: 'LinkedIn',
-    handle: '@skillSYNC',
-    desc: 'Follow us for career opportunities, thought leadership articles, and milestones.',
-    href: 'https://www.linkedin.com/company/skill-synchronized',
-    Icon: FaLinkedin,
-    iconColor: 'text-brand-muted hover:text-[#0A66C2]',
-    borderColor: 'border-brand-muted/20 hover:border-brand-accent/40',
-    buttonClass: 'border-brand-muted/30 text-brand-muted hover:border-brand-accent/50 hover:text-brand-accent',
-    buttonLabel: 'Follow Us',
-    highlight: false,
-  },
-  {
-    label: 'Instagram',
-    handle: '@nexique_',
-    desc: 'Behind-the-scenes content, workshop highlights, and community moments.',
-    href: 'https://instagram.com/nexique_?igsh=MWMzY3ZqMDhjODRzOQ==',
-    Icon: FaInstagram,
-    iconColor: 'text-brand-muted hover:text-[#E1306C]',
-    borderColor: 'border-brand-muted/20 hover:border-brand-accent/40',
-    buttonClass: 'border-brand-muted/30 text-brand-muted hover:border-brand-accent/50 hover:text-brand-accent',
-    buttonLabel: 'Follow Us',
-    highlight: false,
-  },
-  {
-    label: 'YouTube',
-    handle: ' ',
-    desc: 'Workshop recordings, tutorials, project showcases, and event recaps.',
-    href: 'https://youtube.com/',
-    Icon: FaYoutube,
-    iconColor: 'text-brand-muted hover:text-[#FF0000]',
-    borderColor: 'border-brand-muted/20 hover:border-brand-accent/40',
-    buttonClass: 'border-brand-muted/30 text-brand-muted hover:border-brand-accent/50 hover:text-brand-accent',
-    buttonLabel: 'Subscribe',
-    highlight: false,
-  },
-  {
-    label: 'GitHub',
-    handle: 'skillitco',
-    desc: 'Explore our open-source projects, tools, and fellowship contributions.',
-    href: 'https://github.com/skillitco',
-    Icon: FaGithub,
-    iconColor: 'text-brand-muted hover:text-brand-light',
-    borderColor: 'border-brand-muted/20 hover:border-brand-accent/40',
-    buttonClass: 'border-brand-muted/30 text-brand-muted hover:border-brand-accent/50 hover:text-brand-accent',
-    buttonLabel: 'Star Us',
-    highlight: false,
-  },
+  { label: 'LinkedIn',  handle: '@skillSYNC', desc: 'Career opportunities, articles, milestones.',                href: 'https://www.linkedin.com/company/skill-synchronized', Icon: FaLinkedin,  buttonLabel: 'Follow Us' },
+  { label: 'Instagram', handle: '@nexique_',  desc: 'Behind-the-scenes, workshop highlights, community moments.', href: 'https://instagram.com/nexique_?igsh=MWMzY3ZqMDhjODRzOQ==', Icon: FaInstagram, buttonLabel: 'Follow Us' },
+  { label: 'YouTube',   handle: '',           desc: 'Workshop recordings, tutorials, project showcases.',         href: 'https://youtube.com/',                              Icon: FaYoutube,   buttonLabel: 'Subscribe' },
+  { label: 'GitHub',    handle: 'skillitco',  desc: 'Open-source projects, tools, fellowship contributions.',    href: 'https://github.com/skillitco',                      Icon: FaGithub,    buttonLabel: 'Star Us' },
 ]
-
-const fadeUp = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-}
 
 export default function SocialsSection() {
   return (
-    <section className="py-20 bg-brand-darker px-4">
-      <div className="max-w-5xl mx-auto text-center">
-        <motion.div
-          initial="initial"
-          whileInView="animate"
-          viewport={{ once: true }}
-          transition={{ staggerChildren: 0.08 }}
-        >
-          <motion.p
-            variants={fadeUp}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="text-brand-accent text-sm font-semibold tracking-widest uppercase mb-3"
+    <section className="border-b-[3px] border-black bg-white">
+      <div className="px-6 sm:px-10 py-10 border-b-[3px] border-black">
+        <p className="text-[0.7rem] font-semibold uppercase tracking-[3px] text-red mb-3">Community</p>
+        <h2 className="font-editorial text-black text-[3rem] sm:text-[4rem] leading-[0.9] tracking-[2px]">
+          STAY CONNECTED
+        </h2>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        {SOCIALS.map(({ label, handle, desc, href, Icon, buttonLabel, featured }, i) => (
+          <motion.div
+            key={label}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: i * 0.06 }}
+            className={[
+              'flex flex-col p-6 sm:p-8 relative',
+              'border-b-[3px] border-black',
+              'sm:[&:nth-child(odd)]:border-r-[3px] sm:[&:nth-child(odd)]:border-black',
+              'lg:!border-r-[3px] lg:border-black lg:[&:nth-child(3n)]:!border-r-0',
+              featured ? 'bg-red text-white' : 'bg-white',
+            ].join(' ')}
           >
-            Community
-          </motion.p>
-          <motion.h2
-            variants={fadeUp}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="text-3xl md:text-4xl font-display font-bold text-brand-light mb-12"
-          >
-            Join Our Community
-          </motion.h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {SOCIALS.map(({ label, handle, desc, href, Icon, iconColor, borderColor, buttonClass, buttonLabel }) => (
-              <motion.div
-                key={label}
-                variants={fadeUp}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
-                className={`flex flex-col items-center gap-3 rounded-xl border bg-brand-mid p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glow ${borderColor}`}
-              >
-                <Icon className={`h-8 w-8 transition-colors duration-200 ${iconColor}`} />
-
-                <div className="flex flex-col gap-0.5">
-                  <p className="text-sm font-semibold text-brand-light">{label}</p>
-                  <p className="text-xs text-brand-muted">{handle}</p>
-                </div>
-
-                <p className="text-xs text-gray-400 leading-relaxed">{desc}</p>
-
-                <a
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`mt-auto text-xs font-semibold px-4 py-1.5 rounded-full border transition-colors duration-200 ${buttonClass}`}
-                >
-                  {buttonLabel}
-                </a>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+            <Icon className={`h-10 w-10 ${featured ? 'text-white' : 'text-black'}`} />
+            <p className={`font-editorial text-[2rem] tracking-[2px] leading-none mt-4 ${featured ? 'text-white' : 'text-black'}`}>
+              {label.toUpperCase()}
+            </p>
+            {handle && (
+              <p className={`text-[0.72rem] uppercase tracking-[2px] mt-1 ${featured ? 'text-white/70' : 'text-[color:var(--color-gray-mid)]'}`}>
+                {handle}
+              </p>
+            )}
+            <p className={`text-[0.82rem] leading-[1.7] mt-4 flex-1 ${featured ? 'text-white/85' : 'text-[color:var(--color-gray-dark)]'}`}>
+              {desc}
+            </p>
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`mt-5 self-start text-[0.78rem] font-semibold uppercase tracking-[1px] px-4 py-2 border-[3px] transition-colors ${
+                featured
+                  ? 'border-white text-white hover:bg-white hover:text-red'
+                  : 'border-black text-black hover:bg-black hover:text-white'
+              }`}
+            >
+              {buttonLabel} →
+            </a>
+          </motion.div>
+        ))}
       </div>
     </section>
   )

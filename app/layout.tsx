@@ -1,11 +1,19 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Bebas_Neue } from 'next/font/google'
 import './globals.css'
 import Providers from './providers'
 
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
+  display: 'swap',
+})
+
+// Bebas Neue — editorial-bold display font. Only one weight exists.
+const bebas = Bebas_Neue({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-bebas',
   display: 'swap',
 })
 
@@ -44,12 +52,15 @@ export default function RootLayout({
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${inter.variable} ${bebas.variable}`}>
       <head>
         {supabaseUrl && (
           <link rel="preconnect" href={supabaseUrl} />
         )}
       </head>
+      {/* Body stays dark to keep admin/dashboard legacy pages intact.
+          The public site's (public) layout wraps its content in a white
+          .public-shell that overrides these defaults. */}
       <body className="font-sans antialiased bg-brand-dark text-gray-300">
         <Providers>{children}</Providers>
       </body>

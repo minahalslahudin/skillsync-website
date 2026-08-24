@@ -1,43 +1,22 @@
 import VolunteerApplicationForm from '@/components/forms/VolunteerApplicationForm'
 import OpenPositions from '@/components/public/OpenPositions'
+import SectionHeader from '@/components/public/SectionHeader'
+import Ticker from '@/components/public/Ticker'
 
-const BENEFIT_CARDS = [
-  {
-    icon: '📜',
-    title: 'Earn certificates',
-    description: 'Receive verified certificates for contributions and completed milestones on your profile.',
-  },
-  {
-    icon: '🛠️',
-    title: 'Build real skills',
-    description: 'Work on live projects across design, dev, marketing, and operations. Portfolio-worthy experience.',
-  },
-  {
-    icon: '🌍',
-    title: 'Join the community',
-    description: 'Connect with 200+ alumni, mentors, and peers actively building careers and companies.',
-  },
+// Editorial-bold /join page.
+// Section header → benefit cells → roadmap (3 bordered steps) → open
+// positions accordion → application form. Backend/form logic untouched.
+
+const BENEFITS = [
+  { title: 'Earn Certificates', body: 'Verified certificates for contributions and completed milestones — pinned to your profile.' },
+  { title: 'Build Real Skills', body: 'Live projects across design, dev, marketing, ops — portfolio-worthy from day one.' },
+  { title: 'Join The Community', body: 'Connect with 200+ alumni, mentors, and peers building careers and companies.' },
 ]
 
-const ROADMAP_STAGES = [
-  {
-    icon: '🌱',
-    name: 'Volunteer',
-    duration: '3 months',
-    description: 'Start by contributing to real projects. Learn how we work, build your portfolio, and prove your commitment.',
-  },
-  {
-    icon: '🚀',
-    name: 'Intern',
-    duration: '3 months',
-    description: 'Step up to a structured internship. You get a stipend, a defined role, and direct mentorship.',
-  },
-  {
-    icon: '⭐',
-    name: 'Permanent (Paid)',
-    duration: 'Ongoing',
-    description: "Full paid role at skillSYNC. You've earned it — now grow with the company.",
-  },
+const ROADMAP = [
+  { stage: '01', name: 'Volunteer',         duration: '3 months', desc: 'Contribute to real projects, learn how we work, build your portfolio, prove your commitment.' },
+  { stage: '02', name: 'Intern',            duration: '3 months', desc: 'Structured internship with a stipend, defined role, and direct mentorship.' },
+  { stage: '03', name: 'Permanent (Paid)',  duration: 'Ongoing',  desc: "You've earned it — full paid role at skillSYNC. Grow with the company." },
 ]
 
 export const metadata = {
@@ -47,124 +26,104 @@ export const metadata = {
 
 export default function JoinPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-      {/* Hero */}
-      <div className="text-center max-w-2xl mx-auto mb-16">
-        <p className="text-brand-accent text-sm font-semibold tracking-widest uppercase mb-4">Join us</p>
-        <h1 className="text-4xl md:text-5xl font-display font-black text-brand-light leading-tight">
-          Join skillSYNC
-        </h1>
-        <p className="mt-5 text-gray-400 leading-relaxed">
-          We&apos;re always looking for passionate people. Whether you&apos;re a developer, designer, marketer,
-          or content creator — there&apos;s a place for you here.
-        </p>
-      </div>
+    <>
+      <SectionHeader
+        eyebrow="Join Us"
+        title="Join skillSYNC"
+        subtitle="We're always looking for passionate people. Developer, designer, marketer, content creator — there's a place for you here."
+      />
 
-      {/* Benefit cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-        {BENEFIT_CARDS.map(({ icon, title, description }) => (
+      {/* Benefits — 3-col bordered grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 border-b-[3px] border-black bg-white">
+        {BENEFITS.map((b, i) => (
           <div
-            key={title}
-            className="rounded-2xl border border-brand-muted/20 bg-brand-mid p-6 flex flex-col gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(233,69,96,0.15)] hover:border-brand-accent/40"
+            key={b.title}
+            className={[
+              'p-6 sm:p-8 border-b-[3px] border-black md:border-b-0',
+              i < BENEFITS.length - 1 ? 'md:border-r-[3px] md:border-black' : '',
+            ].join(' ')}
           >
-            <span className="text-3xl">{icon}</span>
-            <h3 className="text-base font-display font-semibold text-brand-light">{title}</h3>
-            <p className="text-sm text-gray-400 leading-relaxed">{description}</p>
+            <div className="font-editorial text-red text-[2.5rem] leading-none">
+              0{i + 1}
+            </div>
+            <h3 className="font-editorial text-black text-[1.4rem] tracking-[1px] mt-3">
+              {b.title.toUpperCase()}
+            </h3>
+            <p className="text-[0.85rem] text-[color:var(--color-gray-dark)] leading-[1.7] mt-2">
+              {b.body}
+            </p>
           </div>
         ))}
       </div>
 
-      {/* Career Roadmap */}
-      <section className="mb-16">
-        <div className="text-center max-w-2xl mx-auto mb-10">
-          <p className="text-brand-accent text-xs font-semibold tracking-widest uppercase mb-3">Your career path</p>
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-brand-light">
-            From volunteer to paid role
-          </h2>
-          <p className="mt-4 text-sm text-gray-400 leading-relaxed">
-            A clear progression. Prove yourself, get supported, and grow into a full paid position.
-          </p>
-        </div>
+      {/* Roadmap header */}
+      <SectionHeader
+        eyebrow="Your Career Path"
+        title="From Volunteer To Paid Role"
+        subtitle="A clear progression. Prove yourself, get supported, grow into a full paid position."
+      />
 
-        <div className="rounded-2xl border border-brand-muted/20 bg-brand-darker/40 p-6 sm:p-8">
-          <div className="flex flex-col lg:flex-row items-stretch gap-4 lg:gap-2">
-            {ROADMAP_STAGES.map((stage, idx) => (
-              <div key={stage.name} className="flex flex-col lg:flex-row items-stretch flex-1 gap-4 lg:gap-2">
-                {/* Stage card */}
-                <div className="flex-1 rounded-xl border-2 border-brand-accent/30 bg-brand-mid p-5 sm:p-6 flex flex-col gap-3 relative transition-all duration-300 hover:border-brand-accent hover:shadow-[0_0_25px_rgba(233,69,96,0.15)]">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-3xl sm:text-4xl">{stage.icon}</span>
-                    <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-accent/15 border border-brand-accent/40 text-brand-accent">
-                      {stage.duration}
-                    </span>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-xs font-mono text-brand-accent/70">0{idx + 1}</span>
-                    <h3 className="text-lg sm:text-xl font-display font-bold text-brand-light">
-                      {stage.name}
-                    </h3>
-                  </div>
-                  <p className="text-sm text-gray-400 leading-relaxed">{stage.description}</p>
-                </div>
-
-                {/* Connector arrow */}
-                {idx < ROADMAP_STAGES.length - 1 && (
-                  <div className="flex items-center justify-center flex-shrink-0 py-1 lg:py-0 lg:px-1">
-                    {/* Mobile arrow (down) */}
-                    <span className="lg:hidden text-brand-accent text-2xl" aria-hidden="true">↓</span>
-                    {/* Desktop arrow (right) */}
-                    <span className="hidden lg:inline text-brand-accent text-3xl" aria-hidden="true">→</span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Stipend note */}
-          <div className="mt-6 pt-6 border-t border-brand-muted/20 flex items-start gap-3">
-            <span className="text-brand-accent text-lg flex-shrink-0">💸</span>
-            <p className="text-sm text-gray-400 leading-relaxed">
-              <span className="text-brand-light font-medium">All volunteer and intern roles are stipend-based.</span>{' '}
-              Permanent roles are fully paid.
+      {/* Roadmap — 3 connected bordered boxes */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 border-b-[3px] border-black bg-white">
+        {ROADMAP.map((s, i) => (
+          <div
+            key={s.name}
+            className={[
+              'p-6 sm:p-8 border-b-[3px] border-black lg:border-b-0 relative',
+              i < ROADMAP.length - 1 ? 'lg:border-r-[3px] lg:border-black' : '',
+              i === ROADMAP.length - 1 ? 'bg-red text-white' : 'bg-white',
+            ].join(' ')}
+          >
+            <div className="flex items-start justify-between">
+              <span className={`font-editorial text-[3rem] leading-none ${i === ROADMAP.length - 1 ? 'text-white' : 'text-red'}`}>
+                {s.stage}
+              </span>
+              <span
+                className={[
+                  'text-[0.68rem] font-semibold uppercase tracking-[2px] px-2 py-1 border-[2px]',
+                  i === ROADMAP.length - 1 ? 'border-white text-white' : 'border-black text-black',
+                ].join(' ')}
+              >
+                {s.duration}
+              </span>
+            </div>
+            <h3 className={`font-editorial text-[1.8rem] tracking-[1px] leading-none mt-4 ${i === ROADMAP.length - 1 ? 'text-white' : 'text-black'}`}>
+              {s.name.toUpperCase()}
+            </h3>
+            <p className={`text-[0.85rem] leading-[1.7] mt-3 ${i === ROADMAP.length - 1 ? 'text-white/85' : 'text-[color:var(--color-gray-dark)]'}`}>
+              {s.desc}
             </p>
           </div>
-        </div>
-      </section>
-
-      {/* Commitment callout */}
-      <div className="mb-14 rounded-xl border border-amber-500/40 bg-amber-500/10 p-5 max-w-2xl mx-auto">
-        <div className="flex items-start gap-3">
-          <span className="text-amber-400 text-xl flex-shrink-0">⚠️</span>
-          <div>
-            <p className="text-sm font-semibold text-amber-300">Time commitment: 20 hrs / week</p>
-            <p className="text-sm text-amber-200/70 mt-0.5">
-              All volunteers are expected to commit a minimum of 20 hours per week.
-              Please only apply if you can honour this commitment.
-            </p>
-          </div>
-        </div>
+        ))}
       </div>
+
+      {/* Commitment ticker */}
+      <Ticker
+        items={['20 hrs / week commitment', 'Stipend-based interns', 'Paid permanent roles', '3-month probation', 'Certificates issued']}
+        variant="red"
+      />
 
       {/* Open Positions */}
-      <section className="mb-16">
-        <div className="text-center max-w-2xl mx-auto mb-10">
-          <p className="text-brand-accent text-xs font-semibold tracking-widest uppercase mb-3">We&apos;re hiring</p>
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-brand-light">
-            Open Positions
-          </h2>
-          <p className="mt-4 text-sm text-gray-400 leading-relaxed">
-            Find your fit. Every role is open to volunteers, interns, and experienced applicants.
-          </p>
-        </div>
+      <SectionHeader
+        eyebrow="We're Hiring"
+        title="Open Positions"
+        subtitle="Find your fit. Every role is open to volunteers, interns, and experienced applicants."
+      />
+      <div className="p-6 sm:p-10 border-b-[3px] border-black bg-white">
         <OpenPositions />
-      </section>
+      </div>
 
       {/* Application form */}
-      <div className="max-w-3xl mx-auto rounded-2xl border border-brand-muted/20 bg-brand-mid p-8">
-        <h2 className="text-xl font-display font-bold text-brand-light mb-1">Apply now</h2>
-        <p className="text-sm text-brand-muted mb-8">Takes about 5 minutes. We review every application personally.</p>
-        <VolunteerApplicationForm />
+      <SectionHeader
+        eyebrow="Apply Now"
+        title="Application Form"
+        subtitle="Takes about 5 minutes. We review every application personally."
+      />
+      <div className="p-6 sm:p-10 border-b-[3px] border-black bg-white">
+        <div className="max-w-3xl mx-auto border-[3px] border-black bg-white p-8">
+          <VolunteerApplicationForm />
+        </div>
       </div>
-    </div>
+    </>
   )
 }

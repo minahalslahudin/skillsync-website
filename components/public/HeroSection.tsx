@@ -1,130 +1,121 @@
 'use client'
 
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useBrand } from '@/lib/context/BrandContext'
-import Button from '@/components/ui/Button'
+import { motion } from 'framer-motion'
 
-const MODES = {
-  skillsync: {
-    eyebrow: "Pakistan's Newest Tech Collective",
-    tagline: 'Build. Learn. Earn.',
-    description:
-      'Training the next generation of tech talent through hands-on workshops, real-world projects, and a community that grows together.',
-    cta1: { label: 'Explore Workshops', href: '/workshops' },
-    cta2: { label: 'Join as Volunteer', href: '/join' },
-    accent: '#E94560',
-  },
-  skillit: {
-    eyebrow: 'Digital Agency · Pakistan',
-    tagline: 'We Build. You Scale.',
-    description:
-      'We deliver high-quality digital products for ambitious clients — websites, apps, and brand experiences crafted by real-world talent.',
-    cta1: { label: 'See Our Work', href: '/projects' },
-    cta2: { label: 'Get in Touch', href: '/contact' },
-    accent: '#0F6B7A',
-  },
-}
+// Editorial-bold hero — direct translation of the inspiration file.
+// Left column: giant Bebas Neue headline + sub + two connected buttons.
+// Right column: red panel for the skillIT/agency pitch.
+// A relatively-positioned `#hero-3d-canvas` sits behind the text so a
+// future Three.js/Spline element can be dropped in without layout changes.
 
-const PARTICLES = [
-  { size: 280, top: '8%',  left: '4%',  opacity: 0.06, speed: 7 },
-  { size: 180, top: '58%', left: '78%', opacity: 0.05, speed: 8 },
-  { size: 110, top: '28%', left: '68%', opacity: 0.07, speed: 6 },
-  { size: 85,  top: '72%', left: '18%', opacity: 0.06, speed: 9 },
-  { size: 65,  top: '14%', left: '54%', opacity: 0.05, speed: 7.5 },
-  { size: 140, top: '48%', left: '38%', opacity: 0.04, speed: 10 },
+const WORDS = ['STOP', 'WATCHING.', 'START', 'BUILDING.']
+
+const RECENT = [
+  'LeadSYNC AI · Auto Recruiting Bot',
+  'WhatsApp Support Bot · AI Digest Bot',
 ]
 
 export default function HeroSection() {
-  const { brand } = useBrand()
-  const mode = MODES[brand]
-
   return (
-    <>
-      <style>{`
-        @keyframes hero-gradient {
-          0%, 100% { background-position: 0% 50%; }
-          50%       { background-position: 100% 50%; }
-        }
-        .hero-bg {
-          background: linear-gradient(135deg, #1A1A2E 0%, #16213E 30%, #2C2C54 65%, #1A1A2E 100%);
-          background-size: 400% 400%;
-          animation: hero-gradient 14s ease infinite;
-        }
-        @keyframes particle-float {
-          0%, 100% { transform: translateY(0px) scale(1); }
-          50%       { transform: translateY(-24px) scale(1.04); }
-        }
-      `}</style>
+    <section className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] border-b-[3px] border-black bg-white relative">
+      {/* Placeholder for future 3D background — Three.js / Spline goes here */}
+      <div
+        id="hero-3d-canvas"
+        aria-hidden
+        className="absolute inset-0 pointer-events-none"
+      />
 
-      <section className="hero-bg relative min-h-screen flex items-center justify-center overflow-hidden px-4">
-        {/* Floating particles */}
-        {PARTICLES.map((p, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full pointer-events-none"
-            style={{
-              width: p.size,
-              height: p.size,
-              top: p.top,
-              left: p.left,
-              opacity: p.opacity,
-              background: mode.accent,
-              filter: 'blur(72px)',
-              animation: `particle-float ${p.speed}s ease-in-out ${i * 0.6}s infinite`,
-            }}
-          />
-        ))}
-
-        {/* Content */}
-        <div className="relative z-10 max-w-5xl mx-auto text-center">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={brand}
-              initial={{ opacity: 0, y: 28 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -28 }}
-              transition={{ duration: 0.38, ease: 'easeOut' }}
+      {/* Left column ─────────────────────────────────────────────────────── */}
+      <div className="relative p-8 sm:p-12 lg:p-14 lg:border-r-[3px] lg:border-black">
+        {/* Giant headline — staggered word-by-word reveal */}
+        <motion.h1
+          initial="hidden"
+          animate="show"
+          variants={{
+            hidden: {},
+            show: { transition: { staggerChildren: 0.09, delayChildren: 0.1 } },
+          }}
+          className="font-editorial text-black leading-[0.9] tracking-[2px] mb-8
+                     text-[3.2rem] sm:text-[4.5rem] md:text-[6rem] lg:text-[7rem]"
+        >
+          {WORDS.map((w, i) => (
+            <motion.span
+              key={i}
+              variants={{
+                hidden: { opacity: 0, y: 24 },
+                show:   { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+              }}
+              className="block"
             >
-              <p className="text-brand-muted text-sm font-medium tracking-widest uppercase mb-5">
-                {mode.eyebrow}
-              </p>
+              {w}
+            </motion.span>
+          ))}
+        </motion.h1>
 
-              <h1 className="text-5xl md:text-7xl font-display font-black text-brand-light leading-[1.05] mb-6">
-                {mode.tagline}
-              </h1>
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55, duration: 0.5 }}
+          className="text-[0.9rem] text-[color:var(--color-gray-dark)] leading-[1.8] max-w-[420px] mb-8"
+        >
+          skillSYNC trains students and fresh grads on automation, AI, and
+          full-stack development — with real projects, real mentorship, and a
+          real path to a paid career in tech.
+        </motion.p>
 
-              <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10 leading-relaxed">
-                {mode.description}
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <Link href={mode.cta1.href}>
-                  <Button variant="primary" size="lg">{mode.cta1.label}</Button>
-                </Link>
-                <Link href={mode.cta2.href}>
-                  <Button variant="secondary" size="lg">{mode.cta2.label}</Button>
-                </Link>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {/* Scroll cue */}
+        {/* Two CTA buttons with no gap between them (shared black border) */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.4, duration: 0.6 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-brand-muted/60"
+          transition={{ delay: 0.7, duration: 0.4 }}
+          className="inline-flex"
         >
-          <span className="text-[10px] tracking-[0.25em] uppercase">Scroll</span>
-          <motion.div
-            animate={{ y: [0, 7, 0] }}
-            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-px h-8 bg-gradient-to-b from-brand-muted/40 to-transparent"
-          />
+          <Link href="/join" className="btn-ed-primary">
+            Join skillSYNC
+          </Link>
+          <Link
+            href="/skillit"
+            className="btn-ed-outline border-l-0"
+          >
+            Hire with skillIT
+          </Link>
         </motion.div>
-      </section>
-    </>
+      </div>
+
+      {/* Right column — red panel ────────────────────────────────────────── */}
+      <div className="p-8 sm:p-10 lg:p-12 bg-red flex flex-col justify-between gap-8 border-t-[3px] border-black lg:border-t-0">
+        <div>
+          <div className="text-[0.68rem] uppercase tracking-[3px] text-white/60 mb-4">
+            For companies
+          </div>
+          <div className="font-editorial text-white leading-[1] tracking-[2px] text-[2.2rem] sm:text-[2.8rem]">
+            HIRE
+            <br />
+            AUTOMATION
+            <br />
+            ENGINEERS
+          </div>
+          <p className="text-[0.82rem] text-white/75 leading-[1.7] mt-4">
+            Get vetted engineers who build n8n, Make.com, and AI workflow
+            systems for your business — delivered and production-ready.
+          </p>
+          <Link href="/skillit" className="btn-ed-red mt-6 inline-flex">
+            Explore skillIT →
+          </Link>
+        </div>
+
+        <div className="border-t border-white/20 pt-6">
+          <div className="text-[0.68rem] uppercase tracking-[2px] text-white/50 mb-3">
+            Recent Projects
+          </div>
+          <div className="text-[0.82rem] text-white leading-[2]">
+            {RECENT.map((r) => (
+              <div key={r}>{r}</div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
   )
 }
