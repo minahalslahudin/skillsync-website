@@ -66,7 +66,15 @@ function MemberCard({ member, index }: { member: TeamMemberWithUser; index: numb
 }
 
 export default function TeamSection({ members }: TeamSectionProps) {
-  if (members.length === 0) {
+  // TEMP (Aug 2026): public team display trimmed to the founder only while the
+  // rest of the team is being re-photographed and re-written. Also clears her
+  // avatar so the initials placeholder renders — real photo comes next.
+  // Undo by removing this block once real profiles are ready.
+  const displayMembers = members
+    .filter((m) => m.users.full_name.toLowerCase().includes('minahal'))
+    .map((m) => ({ ...m, users: { ...m.users, avatar_url: null } }))
+
+  if (displayMembers.length === 0) {
     return (
       <p className="py-12 text-center text-[color:var(--color-gray-mid)] uppercase tracking-[2px] text-sm">
         Team profiles coming soon.
@@ -74,9 +82,18 @@ export default function TeamSection({ members }: TeamSectionProps) {
     )
   }
 
+  // Founder shown solo in a centered single-card layout instead of a full grid.
+  if (displayMembers.length === 1) {
+    return (
+      <div className="max-w-sm mx-auto">
+        <MemberCard member={displayMembers[0]} index={0} />
+      </div>
+    )
+  }
+
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {members.map((member, index) => (
+      {displayMembers.map((member, index) => (
         <MemberCard key={member.id} member={member} index={index} />
       ))}
     </div>
