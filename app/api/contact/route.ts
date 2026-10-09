@@ -1,17 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
+import { checkRateLimit, getClientIp, rateLimitResponse, RATE_LIMITS } from '@/lib/security/rateLimit'
+import { sanitizePlain, sanitizeEmail, isValidEmail, MAX_LEN } from '@/lib/security/sanitize'
 
 const VALID_SUBJECTS = ['General', 'Partnership', 'Client Enquiry', 'Workshop', 'Other'] as const
 
 const schema = z.object({
-  name:    z.string().min(2),
-  email:   z.string().email(),
+  name:    z.string().min(2).max(MAX_LEN.name),
+  email:   z.string().email().max(MAX_LEN.email),
   subject: z.enum(VALID_SUBJECTS, { message: 'Invalid subject' }),
-  message: z.string().min(20),
+  message: z.string().min(20).max(MAX_LEN.message),
 })
 
 export async function POST(req: NextRequest) {
+  // ── Rate limit ────────────────────────────────────────────────────────────
+  const ip = getClientIp(req)
+  const rl = checkRateLimit(`contact:${ip}`, RATE_LIMITS.formSubmit.limit, RATE_LIMITS.formSubmit.windowMs)
+  if (!rl.ok) return rateLimitResponse(rl.resetAt)
+
   let body: unknown
   try {
     body = await req.json()
@@ -27,7 +34,15 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const { name, email, subject, message } = parsed.data
+  // ── Sanitize ──────────────────────────────────────────────────────────────
+  const name    = sanitizePlain(parsed.data.name)
+  const email   = sanitizeEmail(parsed.data.email)
+  const subject = parsed.data.subject       // enum, already safe
+  const message = sanitizePlain(parsed.data.message)
+
+  if (name.length < 2)                 return NextResponse.json({ error: 'Enter your name.' }, { status: 422 })
+  if (!isValidEmail(email))            return NextResponse.json({ error: 'Enter a valid email address.' }, { status: 422 })
+  if (message.length < 20)             return NextResponse.json({ error: 'Message must be at least 20 characters.' }, { status: 422 })
 
   // Store in DB
   const supabase = createServerClient()

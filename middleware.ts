@@ -2,8 +2,24 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { createMiddlewareClient } from '@/lib/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
+  // NOTE: createMiddlewareClient uses supabase.auth.getUser() internally,
+  // which VERIFIES the JWT against the Supabase server on every call. This is
+  // spoof-resistant, unlike getSession() which only decodes the cookie.
   const { supabase, user, response } = await createMiddlewareClient(request)
   const { pathname } = request.nextUrl
+
+  // ── /api/admin/*  ────────────────────────────────────────────────────────
+  // Admin API routes must return 401 (not redirect) when the caller has no
+  // valid session. Each route also does its own admin-role check; this is the
+  // outer gate so unauthenticated clients never reach any handler code.
+  if (pathname.startsWith('/api/admin')) {
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    // Session verified — let the route handler do the fine-grained is_admin
+    // check + its own rate limiting. Passing through with the refreshed cookies.
+    return response
+  }
 
   // Already authenticated volunteer → skip volunteer login page
   if (pathname === '/login' && user) {

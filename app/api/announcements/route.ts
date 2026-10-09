@@ -1,16 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
+import { checkRateLimit, getClientIp, rateLimitResponse, RATE_LIMITS } from '@/lib/security/rateLimit'
+import { sanitizePlain, MAX_LEN } from '@/lib/security/sanitize'
 
 const createSchema = z.object({
-  title:             z.string().min(1),
-  body:              z.string().min(1),
-  target:            z.string().min(1),
-  target_department: z.string().nullable().optional(),
+  title:             z.string().min(1).max(MAX_LEN.announcement_title),
+  body:              z.string().min(1).max(MAX_LEN.announcement),
+  target:            z.string().min(1).max(80),
+  target_department: z.string().max(80).nullable().optional(),
   target_user_id:    z.string().uuid().nullable().optional(),
 })
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  // ── Rate limit (read) ─────────────────────────────────────────────────────
+  const ip = getClientIp(req)
+  const rl = checkRateLimit(`announcements-get:${ip}`, RATE_LIMITS.read.limit, RATE_LIMITS.read.windowMs)
+  if (!rl.ok) return rateLimitResponse(rl.resetAt)
+
   const supabase = createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -58,6 +65,11 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  // ── Rate limit ────────────────────────────────────────────────────────────
+  const ip = getClientIp(req)
+  const rl = checkRateLimit(`announcements-post:${ip}`, RATE_LIMITS.authedWrite.limit, RATE_LIMITS.authedWrite.windowMs)
+  if (!rl.ok) return rateLimitResponse(rl.resetAt)
+
   const supabase = createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -73,18 +85,35 @@ export async function POST(req: NextRequest) {
   const parsed = createSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: 'Validation failed' }, { status: 422 })
 
+  // ── Sanitize ──────────────────────────────────────────────────────────────
+  const title             = sanitizePlain(parsed.data.title)
+  const announceBody      = sanitizePlain(parsed.data.body)
+  const target            = sanitizePlain(parsed.data.target)
+  const target_department = parsed.data.target_department ? sanitizePlain(parsed.data.target_department) : null
+
+  if (!title || !announceBody || !target) {
+    return NextResponse.json({ error: 'Validation failed' }, { status: 422 })
+  }
+
   const { error } = await supabase.from('announcements').insert({
-    ...parsed.data,
-    sent_by:  user.id,
-    sent_at:  new Date().toISOString(),
-    target_department: parsed.data.target_department ?? null,
+    title,
+    body:              announceBody,
+    target,
+    target_department,
     target_user_id:    parsed.data.target_user_id ?? null,
+    sent_by:           user.id,
+    sent_at:           new Date().toISOString(),
   })
 
   return error ? NextResponse.json({ error }, { status: 500 }) : NextResponse.json({ success: true })
 }
 
 export async function PATCH(req: NextRequest) {
+  // ── Rate limit ────────────────────────────────────────────────────────────
+  const ip = getClientIp(req)
+  const rl = checkRateLimit(`announcements-patch:${ip}`, RATE_LIMITS.authedWrite.limit, RATE_LIMITS.authedWrite.windowMs)
+  if (!rl.ok) return rateLimitResponse(rl.resetAt)
+
   const supabase = createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

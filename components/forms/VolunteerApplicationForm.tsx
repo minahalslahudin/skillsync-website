@@ -19,7 +19,9 @@ const REFERRAL_SOURCES = [
   'Other',
 ]
 
-const CV_MAX_BYTES   = 20 * 1024 * 1024
+// Aligned with server-side security policy: 5 MB cap enforced by the API
+// route (extension gate), the bucket policy (mime types), and this UX check.
+const CV_MAX_BYTES   = 5 * 1024 * 1024
 const CV_ALLOWED_EXT = ['pdf', 'doc', 'docx']
 const CV_ACCEPT      = '.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 
@@ -137,7 +139,7 @@ export default function VolunteerApplicationForm() {
     if (!file) return
 
     if (file.size > CV_MAX_BYTES) {
-      setCvError('File too large — maximum 20 MB allowed.')
+      setCvError('File too large — maximum 5 MB allowed.')
       e.target.value = ''
       return
     }
@@ -375,7 +377,7 @@ export default function VolunteerApplicationForm() {
           <label className="text-sm font-medium text-brand-light">
             Upload your CV / Resume <span className="text-red-400">*</span>
           </label>
-          <p className="text-xs text-brand-muted -mt-1">PDF, DOC, or DOCX — maximum 20 MB</p>
+          <p className="text-xs text-brand-muted -mt-1">PDF, DOC, or DOCX — maximum 5 MB</p>
 
           {/* Hidden native file input */}
           <input

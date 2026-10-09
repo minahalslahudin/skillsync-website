@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { checkRateLimit, getClientIp, rateLimitResponse, RATE_LIMITS } from '@/lib/security/rateLimit'
 import { ROLES } from '@/lib/constants/roles'
 import { promoteUserRole, changeUserStatus } from '@/lib/supabase/mutations/users'
 import { createAchievement } from '@/lib/supabase/mutations/achievements'
@@ -31,6 +32,10 @@ async function guardAdmin() {
 }
 
 export async function GET(req: NextRequest) {
+  const _rlIp = getClientIp(req)
+  const _rl = checkRateLimit(`admin:users:get:${_rlIp}`, RATE_LIMITS.read.limit, RATE_LIMITS.read.windowMs)
+  if (!_rl.ok) return rateLimitResponse(_rl.resetAt)
+
   const result = await guardAdmin()
   if (!result) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -50,6 +55,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const _rlIp = getClientIp(req)
+  const _rl = checkRateLimit(`admin:users:patch:${_rlIp}`, RATE_LIMITS.authedWrite.limit, RATE_LIMITS.authedWrite.windowMs)
+  if (!_rl.ok) return rateLimitResponse(_rl.resetAt)
+
   const result = await guardAdmin()
   if (!result) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { user } = result

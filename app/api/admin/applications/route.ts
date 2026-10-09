@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { checkRateLimit, getClientIp, rateLimitResponse, RATE_LIMITS } from '@/lib/security/rateLimit'
 
 const schema = z.object({
   id:         z.string().uuid(),
@@ -24,6 +25,10 @@ async function guardAdmin() {
 }
 
 export async function GET(req: NextRequest) {
+  const _rlIp = getClientIp(req)
+  const _rl = checkRateLimit(`admin:applications:get:${_rlIp}`, RATE_LIMITS.read.limit, RATE_LIMITS.read.windowMs)
+  if (!_rl.ok) return rateLimitResponse(_rl.resetAt)
+
   const admin = await guardAdmin()
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -41,6 +46,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const _rlIp = getClientIp(req)
+  const _rl = checkRateLimit(`admin:applications:patch:${_rlIp}`, RATE_LIMITS.authedWrite.limit, RATE_LIMITS.authedWrite.windowMs)
+  if (!_rl.ok) return rateLimitResponse(_rl.resetAt)
+
   const admin = await guardAdmin()
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

@@ -4,21 +4,30 @@
 //
 // Security guarantees in this flow:
 //   • Extension validated here (server-side) before a URL is issued
-//   • Filename is sanitized before it becomes the storage path
+//   • Storage path is a server-generated UUID — caller filename is discarded
 //   • Supabase bucket enforces allowed_mime_types on every direct upload
+//   • Bucket enforces size limit; client MUST also check size < 5MB before
+//     requesting a URL (browser cannot bypass bucket policy)
 //   • Client also validates extension, size, and magic bytes before calling here
 //   • The signed URL is single-use and short-lived (Supabase default: ~60 s)
+//   • Rate-limited to 5 requests / minute / IP (same bucket as form submits)
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getExtension, isAllowedExtension, buildStoragePath } from '@/lib/utils/fileValidation'
+import { checkRateLimit, getClientIp, rateLimitResponse, RATE_LIMITS } from '@/lib/security/rateLimit'
 
 const schema = z.object({
   filename: z.string().min(1).max(255),
 })
 
 export async function POST(req: NextRequest) {
+  // ── Rate limit ────────────────────────────────────────────────────────────
+  const ip = getClientIp(req)
+  const rl = checkRateLimit(`cv-upload:${ip}`, RATE_LIMITS.formSubmit.limit, RATE_LIMITS.formSubmit.windowMs)
+  if (!rl.ok) return rateLimitResponse(rl.resetAt)
+
   let body: unknown
   try { body = await req.json() } catch {
     return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 })
@@ -30,7 +39,8 @@ export async function POST(req: NextRequest) {
   }
 
   // Server-side extension gate — prevents signed URLs for disallowed types
-  // even if the client-side check is bypassed.
+  // even if the client-side check is bypassed. (The bucket also enforces MIME
+  // at upload time, but this rejects earlier without wasting a signed URL.)
   const ext = getExtension(parsed.data.filename)
   if (!isAllowedExtension(ext)) {
     return NextResponse.json(
@@ -39,6 +49,8 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  // Path is a server-generated UUID + preserved extension — caller filename
+  // is discarded entirely. See lib/utils/fileValidation.ts.
   const storagePath = buildStoragePath(parsed.data.filename)
 
   const admin = createAdminClient()

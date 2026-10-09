@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { checkRateLimit, getClientIp, rateLimitResponse, RATE_LIMITS } from '@/lib/security/rateLimit'
 import { updateReview, deleteReview } from '@/lib/supabase/mutations/reviews'
 
 async function guardAdmin() {
@@ -13,6 +14,10 @@ async function guardAdmin() {
 }
 
 export async function GET(req: NextRequest) {
+  const _rlIp = getClientIp(req)
+  const _rl = checkRateLimit(`admin:reviews:get:${_rlIp}`, RATE_LIMITS.read.limit, RATE_LIMITS.read.windowMs)
+  if (!_rl.ok) return rateLimitResponse(_rl.resetAt)
+
   const admin = await guardAdmin()
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -32,6 +37,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const _rlIp = getClientIp(req)
+  const _rl = checkRateLimit(`admin:reviews:patch:${_rlIp}`, RATE_LIMITS.authedWrite.limit, RATE_LIMITS.authedWrite.windowMs)
+  if (!_rl.ok) return rateLimitResponse(_rl.resetAt)
+
   const admin = await guardAdmin()
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -48,6 +57,10 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const _rlIp = getClientIp(req)
+  const _rl = checkRateLimit(`admin:reviews:delete:${_rlIp}`, RATE_LIMITS.authedWrite.limit, RATE_LIMITS.authedWrite.windowMs)
+  if (!_rl.ok) return rateLimitResponse(_rl.resetAt)
+
   const admin = await guardAdmin()
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { id } = await req.json() as { id: string }

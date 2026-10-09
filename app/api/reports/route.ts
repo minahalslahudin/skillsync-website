@@ -1,23 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
+import { checkRateLimit, getClientIp, rateLimitResponse, RATE_LIMITS } from '@/lib/security/rateLimit'
+import { sanitizePlain, MAX_LEN } from '@/lib/security/sanitize'
 
 const entrySchema = z.object({
-  day:         z.string().min(1),
-  task_name:   z.string(),
+  day:         z.string().min(1).max(30),
+  task_name:   z.string().max(MAX_LEN.task_name),
   hours:       z.number().min(0).max(24),
-  deliverable: z.string(),
+  deliverable: z.string().max(MAX_LEN.deliverable),
 })
 
 const schema = z.object({
   week_ending: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format'),
-  entries:     z.array(entrySchema).min(1),
-  total_hours: z.number().min(0),
-  notes:       z.string().optional().nullable(),
-  report_id:   z.string().uuid().optional(), // present when resubmitting
+  entries:     z.array(entrySchema).min(1).max(14),
+  total_hours: z.number().min(0).max(168), // 7*24 = 168, absolute ceiling
+  notes:       z.string().max(MAX_LEN.report_notes).optional().nullable(),
+  report_id:   z.string().uuid().optional(),
 })
 
 export async function POST(req: NextRequest) {
+  // ── Rate limit ────────────────────────────────────────────────────────────
+  // Report submission is authenticated — use the authedWrite bucket (20/min).
+  const ip = getClientIp(req)
+  const rl = checkRateLimit(`reports:${ip}`, RATE_LIMITS.authedWrite.limit, RATE_LIMITS.authedWrite.windowMs)
+  if (!rl.ok) return rateLimitResponse(rl.resetAt)
+
   let body: unknown
   try {
     body = await req.json()
@@ -43,14 +51,23 @@ export async function POST(req: NextRequest) {
 
   const { week_ending, entries, total_hours, notes, report_id } = parsed.data
 
+  // ── Sanitize free-text inside every entry + notes ─────────────────────────
+  const cleanEntries = entries.map((e) => ({
+    day:         sanitizePlain(e.day),
+    task_name:   sanitizePlain(e.task_name),
+    hours:       e.hours,
+    deliverable: sanitizePlain(e.deliverable),
+  }))
+  const cleanNotes = notes ? sanitizePlain(notes) : null
+
   if (report_id) {
     // Resubmit — update existing report (must belong to this user)
     const { error } = await supabase
       .from('reports')
       .update({
-        entries,
+        entries:      cleanEntries,
         total_hours,
-        notes:        notes ?? null,
+        notes:        cleanNotes,
         status:       'pending',
         submitted_at: new Date().toISOString(),
       })
@@ -80,9 +97,9 @@ export async function POST(req: NextRequest) {
     const { error } = await supabase.from('reports').insert({
       user_id:      user.id,
       week_ending,
-      entries,
+      entries:      cleanEntries,
       total_hours,
-      notes:        notes ?? null,
+      notes:        cleanNotes,
       status:       'pending',
       submitted_at: new Date().toISOString(),
     })

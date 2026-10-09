@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { checkRateLimit, getClientIp, rateLimitResponse, RATE_LIMITS } from '@/lib/security/rateLimit'
 import { createEvent, updateEvent, deleteEvent, toggleEventPublished } from '@/lib/supabase/mutations/events'
 
 async function guardAdmin() {
@@ -33,7 +34,11 @@ const createSchema = z.object({
   content:               z.string().nullable().optional(),
 })
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
+  const _rlIp = getClientIp(req)
+  const _rl = checkRateLimit(`admin:events:get:${_rlIp}`, RATE_LIMITS.read.limit, RATE_LIMITS.read.windowMs)
+  if (!_rl.ok) return rateLimitResponse(_rl.resetAt)
+
   const admin = await guardAdmin()
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -47,6 +52,10 @@ export async function GET(_req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const _rlIp = getClientIp(req)
+  const _rl = checkRateLimit(`admin:events:post:${_rlIp}`, RATE_LIMITS.authedWrite.limit, RATE_LIMITS.authedWrite.windowMs)
+  if (!_rl.ok) return rateLimitResponse(_rl.resetAt)
+
   const admin = await guardAdmin()
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -73,6 +82,10 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const _rlIp = getClientIp(req)
+  const _rl = checkRateLimit(`admin:events:patch:${_rlIp}`, RATE_LIMITS.authedWrite.limit, RATE_LIMITS.authedWrite.windowMs)
+  if (!_rl.ok) return rateLimitResponse(_rl.resetAt)
+
   const admin = await guardAdmin()
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -94,6 +107,10 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const _rlIp = getClientIp(req)
+  const _rl = checkRateLimit(`admin:events:delete:${_rlIp}`, RATE_LIMITS.authedWrite.limit, RATE_LIMITS.authedWrite.windowMs)
+  if (!_rl.ok) return rateLimitResponse(_rl.resetAt)
+
   const admin = await guardAdmin()
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

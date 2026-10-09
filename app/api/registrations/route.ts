@@ -2,13 +2,43 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase/server'
 import { createRegistration } from '@/lib/supabase/mutations/events'
+import { checkRateLimit, getClientIp, rateLimitResponse, RATE_LIMITS } from '@/lib/security/rateLimit'
+import { sanitizePlain, MAX_LEN } from '@/lib/security/sanitize'
 
 const schema = z.object({
   event_id:  z.string().uuid(),
   form_data: z.record(z.string(), z.unknown()),
 })
 
+// Same recursive sanitizer as /api/events — kept local so each route can
+// evolve independently.
+function sanitizeFormData(obj: Record<string, unknown>, depth = 0): Record<string, unknown> {
+  if (depth > 6) return {}
+  const out: Record<string, unknown> = {}
+  for (const [key, v] of Object.entries(obj)) {
+    if (typeof v === 'string') {
+      const clean = sanitizePlain(v)
+      if (clean.length > MAX_LEN.motivation) continue
+      out[key] = clean
+    } else if (Array.isArray(v)) {
+      out[key] = v.slice(0, 50).map((x) =>
+        typeof x === 'string' ? sanitizePlain(x).slice(0, MAX_LEN.short_answer) : x
+      )
+    } else if (v && typeof v === 'object') {
+      out[key] = sanitizeFormData(v as Record<string, unknown>, depth + 1)
+    } else {
+      out[key] = v
+    }
+  }
+  return out
+}
+
 export async function POST(req: NextRequest) {
+  // ── Rate limit ────────────────────────────────────────────────────────────
+  const ip = getClientIp(req)
+  const rl = checkRateLimit(`registrations:${ip}`, RATE_LIMITS.formSubmit.limit, RATE_LIMITS.formSubmit.windowMs)
+  if (!rl.ok) return rateLimitResponse(rl.resetAt)
+
   let body: unknown
   try {
     body = await req.json()
@@ -24,8 +54,9 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const { event_id, form_data } = parsed.data
-  const supabase = createServerClient()
+  const { event_id } = parsed.data
+  const form_data    = sanitizeFormData(parsed.data.form_data as Record<string, unknown>)
+  const supabase     = createServerClient()
 
   // Fetch event to verify seats + deadline
   const { data: event } = await supabase
@@ -42,7 +73,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Registration is closed' }, { status: 422 })
   }
 
-  // Check deadline
   const deadlineDate = event.registration_deadline
     ? new Date(event.registration_deadline as string)
     : event.date
@@ -52,12 +82,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Registration deadline has passed' }, { status: 422 })
   }
 
-  // Check capacity
   if (event.seats !== null && (event.seats_taken as number) >= (event.seats as number)) {
     return NextResponse.json({ error: 'This event is full' }, { status: 409 })
   }
 
-  // Attach user_id if authenticated
   const { data: { user } } = await supabase.auth.getUser()
 
   const { error } = await createRegistration({
