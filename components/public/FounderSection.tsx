@@ -39,10 +39,7 @@ const RUNNING_STATS: { value: string; label: string }[] = [
   { value: '10+',  label: 'Cohorts run' },
 ]
 
-// TODO: Replace with the dedicated higher-resolution founder portrait when
-// the final shoot is in. The current file is a placeholder copied from the
-// team gallery (public/team/minahal-salahudin.jpg).
-const FOUNDER_IMAGE_SRC = '/images/founder-minahal.jpg'
+const FOUNDER_IMAGE_SRC = '/team/founder.jpeg'
 
 const LINKEDIN_URL = 'https://www.linkedin.com/in/minahal-salahudin-a5747534b'
 

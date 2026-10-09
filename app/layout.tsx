@@ -43,7 +43,16 @@ export const metadata: Metadata = {
     description: "Pakistan's newest tech training platform and creative agency.",
     images: ['/og-image.png'],
   },
-  icons: { icon: '/favicon.ico' },
+  // Next.js auto-generates <link> tags for app/favicon.ico, app/icon.svg,
+  // and app/apple-icon.png. The extra 48×48 PNG below is for Google Search,
+  // which requires a size that is a multiple of 48.
+  icons: {
+    icon: [
+      { url: '/favicon-48.png', type: 'image/png', sizes: '48x48' },
+      { url: '/favicon-96.png', type: 'image/png', sizes: '96x96' },
+    ],
+  },
+  manifest: '/manifest.webmanifest',
 }
 
 export default function RootLayout({
