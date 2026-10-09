@@ -31,6 +31,9 @@ export default async function WorkshopDetailPage({ params }: Props) {
   const deadlinePassed  = event.registration_deadline ? new Date(event.registration_deadline) < now : false
   const registrationActive = event.registration_open && isUpcomingEvent && !deadlinePassed
   const seatsLeft = event.seats != null ? event.seats - event.seats_taken : null
+  // Past workshops: use the explicit attendees count when present.
+  const registeredCount = isUpcomingEvent ? event.seats_taken : (event.attendees ?? event.seats_taken)
+  const priceFormatted  = event.price.toLocaleString('en-PK')
 
   return (
     <>
@@ -48,8 +51,18 @@ export default async function WorkshopDetailPage({ params }: Props) {
             Workshop
           </span>
           <span className={`text-[0.62rem] font-semibold uppercase tracking-[2px] px-2 py-0.5 ${event.is_paid ? 'bg-black text-white' : 'bg-red text-white'}`}>
-            {event.is_paid ? `Rs ${event.price}` : 'FREE'}
+            {event.is_paid ? `Rs ${priceFormatted}` : 'FREE'}
           </span>
+          {event.cohort && (
+            <span className="text-[0.62rem] font-semibold uppercase tracking-[2px] px-2 py-0.5 bg-red text-white">
+              {event.cohort}
+            </span>
+          )}
+          {!isUpcomingEvent && (
+            <span className="text-[0.62rem] font-semibold uppercase tracking-[2px] px-2 py-0.5 border border-black text-black">
+              Past
+            </span>
+          )}
         </div>
         <h1 className="font-editorial text-black text-[2.5rem] sm:text-[4rem] leading-[0.95] tracking-[2px]">
           {event.title.toUpperCase()}
@@ -79,15 +92,15 @@ export default async function WorkshopDetailPage({ params }: Props) {
             </div>
           )}
 
-          {!event.external_registration_url && (event.seats_taken > 0 || seatsLeft !== null) && (
-            <div className="mt-8 grid grid-cols-2 border-[3px] border-black">
-              <div className="p-5 border-r-[3px] border-black">
-                <p className="font-editorial text-red text-[2.5rem] leading-none">{event.seats_taken}</p>
+          {!event.external_registration_url && (registeredCount > 0 || (isUpcomingEvent && seatsLeft !== null)) && (
+            <div className={`mt-8 grid border-[3px] border-black ${isUpcomingEvent && seatsLeft !== null ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              <div className={`p-5 ${isUpcomingEvent && seatsLeft !== null ? 'border-r-[3px] border-black' : ''}`}>
+                <p className="font-editorial text-red text-[2.5rem] leading-none">{registeredCount}</p>
                 <p className="text-[0.72rem] uppercase tracking-[2px] text-[color:var(--color-gray-mid)] mt-1">
-                  Registered
+                  {isUpcomingEvent ? 'Registered' : 'Attended'}
                 </p>
               </div>
-              {seatsLeft !== null && (
+              {isUpcomingEvent && seatsLeft !== null && (
                 <div className="p-5">
                   <p className={`font-editorial text-[2.5rem] leading-none ${seatsLeft <= 5 ? 'text-red' : 'text-black'}`}>
                     {seatsLeft}
@@ -161,7 +174,7 @@ export default async function WorkshopDetailPage({ params }: Props) {
                       Registration is open. Complete your registration and payment to secure your seat.
                     </p>
                     <Link href="/workshops/register" className="btn-ed-primary w-full">
-                      Register — Rs {event.price}
+                      Register — Rs {priceFormatted}
                     </Link>
                     <p className="text-[0.7rem] uppercase tracking-[1px] text-[color:var(--color-gray-mid)] text-center">
                       Seats are limited · Confirmed after payment verification

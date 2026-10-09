@@ -69,6 +69,13 @@ export interface Event {
   brand: string | null
   external_registration_url: string | null
   hide_seats_display: boolean | null
+  // Explicit attendance for completed workshops. Preferred over
+  // seats_taken on past workshops; null for events without a
+  // confirmed final count.
+  attendees: number | null
+  // Grouping label (e.g. "AI Cohort 1.0", "POWER 5"). Null when
+  // the workshop is standalone.
+  cohort: string | null
 }
 
 export interface Project {

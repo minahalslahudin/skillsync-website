@@ -18,7 +18,12 @@ export default function WorkshopCard({ event }: WorkshopCardProps) {
   const isUpcoming = event.date ? new Date(event.date) > new Date() : false
   const seatsLeft  = event.seats != null ? event.seats - event.seats_taken : null
 
-  const priceLabel = event.is_paid ? `Rs ${event.price}` : 'FREE'
+  // For past workshops, prefer the explicit `attendees` count over the
+  // live-derived seats_taken (which collapses to 0 for seeded paid past
+  // workshops with no workshop_registrations rows).
+  const attendedCount = event.attendees ?? event.seats_taken
+
+  const priceLabel  = event.is_paid ? `Rs ${event.price.toLocaleString('en-PK')}` : 'FREE'
   const statusLabel = isUpcoming ? 'UPCOMING' : 'PAST'
 
   return (
@@ -50,6 +55,13 @@ export default function WorkshopCard({ event }: WorkshopCardProps) {
           {event.date && ` · ${formatDate(event.date)}`}
         </span>
 
+        {/* Cohort badge — grouping label for workshops that belong to a cohort */}
+        {event.cohort && (
+          <span className="inline-flex self-start text-[0.62rem] font-semibold uppercase tracking-[2px] px-2 py-0.5 bg-black text-white">
+            {event.cohort}
+          </span>
+        )}
+
         {/* Title */}
         <h3 className="font-editorial text-black text-[1.8rem] leading-[1] tracking-[1px] line-clamp-2">
           {event.title}
@@ -79,9 +91,9 @@ export default function WorkshopCard({ event }: WorkshopCardProps) {
         {/* Stats row (past = attendees, upcoming = seats) */}
         {!event.hide_seats_display && (
           <div className="text-[0.78rem] text-[color:var(--color-gray-dark)]">
-            {!isUpcoming && event.seats_taken > 0 && (
+            {!isUpcoming && attendedCount > 0 && (
               <span>
-                <span className="text-red font-semibold">{event.seats_taken}</span> people attended
+                <span className="text-red font-semibold">{attendedCount}</span> people attended
               </span>
             )}
             {isUpcoming && seatsLeft !== null && (
@@ -102,11 +114,11 @@ export default function WorkshopCard({ event }: WorkshopCardProps) {
                 rel="noopener noreferrer"
                 className="btn-ed-primary btn-ed-sm"
               >
-                Register — Rs {event.price}
+                Register — Rs {event.price.toLocaleString('en-PK')}
               </a>
             ) : (
               <Link href="/workshops/register" className="btn-ed-primary btn-ed-sm">
-                Register — Rs {event.price}
+                Register — Rs {event.price.toLocaleString('en-PK')}
               </Link>
             )
           ) : (
