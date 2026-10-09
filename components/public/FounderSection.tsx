@@ -72,22 +72,24 @@ export default function FounderSection() {
         </motion.div>
       </div>
 
-      {/* ── Portrait + bio ────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] border-b-[3px] border-black">
+      {/* ── Bio (left on desktop) + portrait (right on desktop) ───────────────
+          Mobile keeps the photo on top via DOM order; `lg:order-last` moves it
+          to the right-hand column on desktop. */}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] border-b-[3px] border-black">
         {/* Photo — fixed 4:5 aspect to prevent CLS */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-20px' }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="relative w-full aspect-[4/5] bg-black border-b-[3px] lg:border-b-0 lg:border-r-[3px] border-black overflow-hidden"
+          className="relative w-full aspect-[4/5] bg-black border-b-[3px] lg:border-b-0 lg:border-l-[3px] border-black overflow-hidden lg:order-last"
         >
           <Image
             src={FOUNDER_IMAGE_SRC}
             alt="Minahal Salahudin, Founder and CEO of skillSYNC"
             fill
             priority
-            sizes="(min-width: 1024px) 42vw, 100vw"
+            sizes="(min-width: 1024px) 38vw, 100vw"
             className="object-cover grayscale hover:grayscale-0 transition-all duration-500"
           />
         </motion.div>
