@@ -43,15 +43,9 @@ export const metadata: Metadata = {
     description: "Pakistan's newest tech training platform and creative agency.",
     images: ['/og-image.png'],
   },
-  // Next.js auto-generates <link> tags for app/favicon.ico, app/icon.svg,
-  // and app/apple-icon.png. The extra 48×48 PNG below is for Google Search,
-  // which requires a size that is a multiple of 48.
-  icons: {
-    icon: [
-      { url: '/favicon-48.png', type: 'image/png', sizes: '48x48' },
-      { url: '/favicon-96.png', type: 'image/png', sizes: '96x96' },
-    ],
-  },
+  // All <link rel="icon"> tags are declared explicitly inside <head> in the
+  // RootLayout below (clearest signal for Google's favicon crawler). We only
+  // keep the manifest reference here.
   manifest: '/manifest.webmanifest',
 }
 
@@ -66,6 +60,17 @@ export default function RootLayout({
         {supabaseUrl && (
           <link rel="preconnect" href={supabaseUrl} />
         )}
+        {/* Explicit favicon tags. Next.js also emits tags from app/icon.*
+            files and metadata.icons above, but older crawlers (notably
+            Google's favicon fetcher) are more reliable when the links are
+            hard-coded with the legacy `shortcut icon` rel. */}
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
+        <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+        <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon.png" />
       </head>
       {/* Body stays dark to keep admin/dashboard legacy pages intact.
           The public site's (public) layout wraps its content in a white
